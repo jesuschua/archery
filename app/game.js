@@ -53,7 +53,7 @@ function drawBow() {
     ctx.translate(bow.x, bow.y);
     ctx.rotate(bow.angle);
     ctx.fillStyle = 'brown';
-    ctx.fillRect(-5, -50, 10, 100);
+    ctx.fillRect(-5, -50, 10, 50);
     ctx.restore();
 }
 
@@ -67,7 +67,7 @@ function drawArrow() {
     ctx.translate(arrow.x, arrow.y);
     ctx.rotate(bow.angle);
     ctx.fillStyle = 'gray';
-    ctx.fillRect(-2, -50, 4, 50);
+    ctx.fillRect(-2, -50, 4, 30);
     ctx.restore();
 }
 
