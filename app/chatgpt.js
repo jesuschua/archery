@@ -76,10 +76,9 @@ function drawArrow() {
 
     ctx.save();
     ctx.translate(arrow.x, arrow.y);
-    // ctx.rotate(arrow.angle);
     ctx.rotate(arrow.fired ? arrow.releaseAngle : arrow.angle); // Use releaseAngle if fired
     ctx.fillStyle = 'gray';
-    ctx.fillRect(0, 0, 100, 4);
+    ctx.fillRect(-2, -50, 4, 50);
     ctx.restore();
 }
 
@@ -103,8 +102,7 @@ window.addEventListener('mousemove', (e) => {
     let dx = e.clientX - bow.x;
     let dy = e.clientY - bow.y;
     bow.angle = Math.atan2(dy, dx);
-    arrow.angle = bow.angle + Math.PI / 2;  // Adjust the
-    arrow
+    arrow.angle = bow.angle + Math.PI / 2;  // Adjust the arrow angle to match bow
 });
 
 window.addEventListener('touchmove', (e) => {
@@ -124,14 +122,12 @@ window.addEventListener('touchstart', () => {
     bow.pulling = true;
 });
 
-
 window.addEventListener('mouseup', () => {
     if (bow.pulling) {
         arrow.fired = true;
         arrow.speed = 15;  // Adjust this for difficulty
+        arrow.releaseAngle = arrow.angle;  // Store the angle at the moment of release
         bow.pulling = false;
-        arrow.releaseAngle = bow.angle;  // Store the angle at the moment of release
-        
     }
 });
 
@@ -139,12 +135,13 @@ window.addEventListener('touchend', () => {
     if (bow.pulling) {
         arrow.fired = true;
         arrow.speed = 15;  // Adjust this for difficulty
+        arrow.releaseAngle = arrow.angle;  // Store the angle at the moment of release
         bow.pulling = false;
-        arrow.releaseAngle = bow.angle;  // Store the angle at the moment of release
     }
 });
 
 function updateArrow() {
+    // Update arrow position using the stored release angle
     arrow.x += arrow.speed * Math.cos(arrow.releaseAngle);
     arrow.y += arrow.speed * Math.sin(arrow.releaseAngle);
 
