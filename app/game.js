@@ -89,6 +89,14 @@ function drawTarget() {
     ctx.closePath();
 }
 
+function getEventPosition(e) {
+    if (e.touches) {  // If this is a touch event
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else {  // If this is a mouse event
+        return { x: e.clientX, y: e.clientY };
+    }
+}
+
 window.addEventListener('mousemove', (e) => {
     let dx = e.clientX - bow.x;
     let dy = e.clientY - bow.y;
@@ -97,9 +105,23 @@ window.addEventListener('mousemove', (e) => {
     arrow
 });
 
+window.addEventListener('touchmove', (e) => {
+    if (bow.pulling) {
+        let pos = getEventPosition(e);
+        let dx = pos.x - bow.x;
+        let dy = pos.y - bow.y;
+        bow.angle = Math.atan2(dy, dx);
+    }
+});
+
 window.addEventListener('mousedown', () => {
     bow.pulling = true;
 });
+
+window.addEventListener('touchstart', () => {
+    bow.pulling = true;
+});
+
 
 window.addEventListener('mouseup', () => {
     if (bow.pulling) {
@@ -109,6 +131,15 @@ window.addEventListener('mouseup', () => {
         arrow.angle = bow.angle + Math.PI / 2;
     }
 });
+
+window.addEventListener('touchend', () => {
+    if (bow.pulling) {
+        arrow.fired = true;
+        arrow.speed = 15;  // Adjust this for difficulty
+        bow.pulling = false;
+    }
+});
+
 
 function updateArrow() {
     arrow.x += arrow.speed * Math.cos(bow.angle);
