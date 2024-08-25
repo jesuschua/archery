@@ -31,8 +31,8 @@ let arrow = {
 const target = {
     x: canvas.width - 100,
     y: canvas.height / 2,
-    radius: 10,
-    amplitude: 100,
+    radius: 50,
+    amplitude: 1000,
     frequency: 0.01
 };
 

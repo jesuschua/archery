@@ -24,14 +24,14 @@ let arrow = {
     y: bow.y,
     speed: 0,
     fired: false,
-    angle: bow.angle + Math.PI / 2,
+    angle: bow.angle,
     releaseAngle: 0 // Added to store the release angle
 };
 
 const target = {
     x: canvas.width - 100,
     y: canvas.height / 2,
-    radius: 10,
+    radius: 30,
     amplitude: 100,
     frequency: 0.01
 };
@@ -64,7 +64,7 @@ function drawBow() {
     ctx.translate(bow.x, bow.y);
     ctx.rotate(bow.angle);
     ctx.fillStyle = 'brown';
-    ctx.fillRect(-5, -50, 10, 100);
+    ctx.fillRect(10, -95, 10, 200);
     ctx.restore();
 }
 
@@ -77,9 +77,9 @@ function drawArrow() {
     ctx.save();
     ctx.translate(arrow.x, arrow.y);
     // ctx.rotate(arrow.angle);
-    ctx.rotate(arrow.fired ? arrow.releaseAngle : arrow.angle); // Use releaseAngle if fired
+    ctx.rotate(arrow.fired ? arrow.releaseAngle : bow.angle); // Use releaseAngle if fired
     ctx.fillStyle = 'gray';
-    ctx.fillRect(0, 0, 100, 4);
+    ctx.fillRect(-90, 0, 150, 5);
     ctx.restore();
 }
 
@@ -162,8 +162,8 @@ function updateArrow() {
 
 function resetArrow() {
     arrow.fired = false;
-    arrow.x = bow.x;
-    arrow.y = bow.y;
+    // arrow.x = arrow.x;
+    // arrow.y = bow.y;
     arrow.speed = 0;
 }
 
