@@ -10,8 +10,10 @@ window.addEventListener('resize', () => {
     canvas.height = window.innerHeight;
 });
 
+let time = 0;
+
 let bow = {
-    x: canvas.width / 2,
+    x: 300,
     y: canvas.height / 2,
     angle: 0,
     pulling: false
@@ -21,13 +23,16 @@ let arrow = {
     x: bow.x,
     y: bow.y,
     speed: 0,
-    fired: false
+    fired: false,
+    angle: bow.angle + Math.PI / 2
 };
 
 const target = {
     x: canvas.width - 100,
     y: canvas.height / 2,
-    radius: 50
+    radius: 10,
+    amplitude: 100,
+    frequency: 0.01
 };
 
 let score = 0;
@@ -35,9 +40,14 @@ let score = 0;
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    time += 1;
+
+    target.y = canvas.height / 2 + Math.sin(time * target.frequency) * target.amplitude;
+
     drawBow();
     drawArrow();
     drawTarget();
+    drawScore();
 
     if (arrow.fired) {
         updateArrow();
@@ -53,21 +63,21 @@ function drawBow() {
     ctx.translate(bow.x, bow.y);
     ctx.rotate(bow.angle);
     ctx.fillStyle = 'brown';
-    ctx.fillRect(-5, -50, 10, 50);
+    ctx.fillRect(-5, -50, 10, 100);
     ctx.restore();
 }
 
 function drawArrow() {
-    if (!arrow.fired) {
+    if (!arrow.fired && !bow.pulling) {
         arrow.x = bow.x;
         arrow.y = bow.y;
     }
 
     ctx.save();
     ctx.translate(arrow.x, arrow.y);
-    ctx.rotate(bow.angle);
+    ctx.rotate(arrow.angle);
     ctx.fillStyle = 'gray';
-    ctx.fillRect(-2, -50, 4, 30);
+    ctx.fillRect(-2, -50, 4, 50);
     ctx.restore();
 }
 
@@ -83,6 +93,8 @@ window.addEventListener('mousemove', (e) => {
     let dx = e.clientX - bow.x;
     let dy = e.clientY - bow.y;
     bow.angle = Math.atan2(dy, dx);
+    arrow.angle = bow.angle + Math.PI / 2;  // Adjust the
+    arrow
 });
 
 window.addEventListener('mousedown', () => {
@@ -94,6 +106,7 @@ window.addEventListener('mouseup', () => {
         arrow.fired = true;
         arrow.speed = 15;  // Adjust this for difficulty
         bow.pulling = false;
+        arrow.angle = bow.angle + Math.PI / 2;
     }
 });
 
@@ -103,8 +116,7 @@ function updateArrow() {
 
     // Check if the arrow hits the target
     if (Math.hypot(arrow.x - target.x, arrow.y - target.y) < target.radius) {
-        score += 10;  // Simple scoring, adjust as needed
-        arrow.fired = false;
+        score += 1;  // Simple scoring, adjust as needed
         resetArrow();
     }
 
@@ -125,19 +137,4 @@ function drawScore() {
     ctx.fillStyle = 'black';
     ctx.font = '24px Arial';
     ctx.fillText(`Score: ${score}`, 10, 30);
-}
-
-function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    drawBow();
-    drawArrow();
-    drawTarget();
-    drawScore();
-
-    if (arrow.fired) {
-        updateArrow();
-    }
-
-    requestAnimationFrame(gameLoop);
 }
