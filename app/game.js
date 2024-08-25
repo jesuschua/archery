@@ -12,6 +12,8 @@ window.addEventListener('resize', () => {
 
 let time = 0;
 
+let targetColor = 'red';  // Variable to track the target's color
+
 let bow = {
     x: 300,
     y: canvas.height / 2,
@@ -86,7 +88,7 @@ function drawArrow() {
 function drawTarget() {
     ctx.beginPath();
     ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
-    ctx.fillStyle = 'red';
+    ctx.fillStyle = targetColor;  // Use the targetColor variable
     ctx.fill();
     ctx.closePath();
 }
@@ -117,53 +119,71 @@ window.addEventListener('touchmove', (e) => {
 });
 
 window.addEventListener('mousedown', () => {
-    bow.pulling = true;
+    if (!arrow.fired) {
+        bow.pulling = true;
+    }
 });
 
 window.addEventListener('touchstart', () => {
-    bow.pulling = true;
+    if (!arrow.fired) {
+        bow.pulling = true;
+    }
 });
 
+
+const gravity = 0.12;  // Adjust this value to simulate gravity
 
 window.addEventListener('mouseup', () => {
     if (bow.pulling) {
         arrow.fired = true;
-        arrow.speed = 15;  // Adjust this for difficulty
+        arrow.speed = 30;  // Adjust this for difficulty
+        arrow.vx = arrow.speed * Math.cos(bow.angle);  // Horizontal component of velocity
+        arrow.vy = arrow.speed * Math.sin(bow.angle);  // Vertical component of velocity
         bow.pulling = false;
         arrow.releaseAngle = bow.angle;  // Store the angle at the moment of release
-        
     }
 });
 
 window.addEventListener('touchend', () => {
     if (bow.pulling) {
         arrow.fired = true;
-        arrow.speed = 15;  // Adjust this for difficulty
+        arrow.speed =15;  // Adjust this for difficulty
+        arrow.vx = arrow.speed * Math.cos(bow.angle);  // Horizontal component of velocity
+        arrow.vy = arrow.speed * Math.sin(bow.angle);  // Vertical component of velocity
         bow.pulling = false;
         arrow.releaseAngle = bow.angle;  // Store the angle at the moment of release
     }
 });
 
 function updateArrow() {
-    arrow.x += arrow.speed * Math.cos(arrow.releaseAngle);
-    arrow.y += arrow.speed * Math.sin(arrow.releaseAngle);
+    if (arrow.fired) {
+        arrow.x += arrow.vx;
+        arrow.y += arrow.vy;
+        arrow.vy += gravity;  // Apply gravity to the vertical velocity
+        
+        // Check if the arrow hits the target
+        if (Math.hypot(arrow.x - target.x, arrow.y - target.y) < target.radius) {
+            score += 1;  // Simple scoring, adjust as needed
+            targetColor = 'green';  // Change target color to green
+            setTimeout(() => {
+                targetColor = 'red';  // Revert target color back to red after 500ms
+            }, 500);
+            resetArrow();
+        }
 
-    // Check if the arrow hits the target
-    if (Math.hypot(arrow.x - target.x, arrow.y - target.y) < target.radius) {
-        score += 1;  // Simple scoring, adjust as needed
-        resetArrow();
-    }
-
-    // If arrow goes off-screen, reset
-    if (arrow.x > canvas.width || arrow.y > canvas.height || arrow.x < 0 || arrow.y < 0) {
-        resetArrow();
+        // If arrow goes off-screen, reset
+        if (arrow.x > canvas.width || arrow.y > canvas.height || arrow.x < 0 || arrow.y < 0) {
+            resetArrow();
+        }
     }
 }
 
 function resetArrow() {
     arrow.fired = false;
-    // arrow.x = arrow.x;
-    // arrow.y = bow.y;
+    arrow.x = bow.x;  // Reset to bow's position
+    arrow.y = bow.y;  // Reset to bow's position
+    arrow.vx = 0;
+    arrow.vy = 0;
     arrow.speed = 0;
 }
 
