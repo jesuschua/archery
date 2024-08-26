@@ -5,20 +5,21 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
+window.addEventListener('resize', resizeCanvas);
 
 let time = 0;
 
 let targetColor = 'red';  // Variable to track the target's color
 
+let target_ratio = 0.012;  // 1.2% of canvas width
+
 let bow = {
-    x: 300,
-    y: canvas.height / 2,
+    x: 0.3,  // 30% of canvas width
+    y: 0.5,  // 50% of canvas height
     angle: 0,
-    pulling: false
+    pulling: false,
+    width: 0.05,  // 5% of canvas width
+    height: 0.2  // 20% of canvas height
 };
 
 let arrow = {
@@ -27,13 +28,15 @@ let arrow = {
     speed: 0,
     fired: false,
     angle: bow.angle,
-    releaseAngle: 0 // Added to store the release angle
+    releaseAngle: 0, // Added to store the release angle
+    width: 0.02,  // 2% of canvas width
+    height: 0.01  // 1% of canvas height
 };
 
 const target = {
-    x: canvas.width - 100,
-    y: canvas.height / 2,
-    radius: 30,
+    x: 0.9,  // 90% of canvas width
+    y: 0.5,  // 50% of canvas height
+    radius: target_ratio,  // 2% of canvas width
     amplitude: 100,
     frequency: 0.01
 };
@@ -41,6 +44,26 @@ const target = {
 let score = 0;
 let triesLeft = 3;  // Variable to track the number of tries left
 let arrowPath = [];  // Array to store the positions of the arrow
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Update bow and arrow positions
+    bow.x = canvas.width * 0.3;
+    bow.y = canvas.height * 0.5;
+    bow.width = canvas.width * 0.05;
+    bow.height = canvas.height * 0.2;
+    arrow.x = bow.x;
+    arrow.y = bow.y;
+    arrow.width = canvas.width * 0.02;
+    arrow.height = canvas.height * 0.01;
+
+    // Update target position and size
+    target.x = canvas.width * 0.9;
+    target.y = canvas.height * 0.5;
+    target.radius = canvas.width * target_ratio;  // Corrected to 2% of canvas width
+}
 
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -63,6 +86,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
+resizeCanvas();
 gameLoop();
 
 function drawBow() {
@@ -86,10 +110,38 @@ function drawArrow() {
 function drawTarget() {
     ctx.beginPath();
     ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
-    ctx.fillStyle = targetColor;  // Use the targetColor variable
+    ctx.fillStyle = targetColor;
     ctx.fill();
     ctx.closePath();
 }
+
+// Other functions like drawScore, drawTriesLeft, drawTracer, updateArrow
+
+// function drawBow() {
+//     ctx.save();
+//     ctx.translate(bow.x, bow.y);
+//     ctx.rotate(bow.angle);
+//     ctx.fillStyle = 'brown';
+//     ctx.fillRect(10, -95, 10, 200);
+//     ctx.restore();
+// }
+
+// function drawArrow() {
+//     ctx.save();
+//     ctx.translate(arrow.x, arrow.y);
+//     ctx.rotate(arrow.fired ? arrow.angle : bow.angle); // Use arrow.angle if fired
+//     ctx.fillStyle = 'gray';
+//     ctx.fillRect(-90, 0, 150, 5);
+//     ctx.restore();
+// }
+
+// function drawTarget() {
+//     ctx.beginPath();
+//     ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
+//     ctx.fillStyle = targetColor;  // Use the targetColor variable
+//     ctx.fill();
+//     ctx.closePath();
+// }
 
 function drawScore() {
     ctx.fillStyle = 'black';
