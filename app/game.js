@@ -39,6 +39,8 @@ const target = {
 };
 
 let score = 0;
+let triesLeft = 3;  // Variable to track the number of tries left
+let arrowPath = [];  // Array to store the positions of the arrow
 
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -51,6 +53,8 @@ function gameLoop() {
     drawArrow();
     drawTarget();
     drawScore();
+    drawTriesLeft();
+    drawTracer();
 
     if (arrow.fired) {
         updateArrow();
@@ -71,15 +75,9 @@ function drawBow() {
 }
 
 function drawArrow() {
-    if (!arrow.fired && !bow.pulling) {
-        arrow.x = bow.x;
-        arrow.y = bow.y;
-    }
-
     ctx.save();
     ctx.translate(arrow.x, arrow.y);
-    // ctx.rotate(arrow.angle);
-    ctx.rotate(arrow.fired ? arrow.releaseAngle : bow.angle); // Use releaseAngle if fired
+    ctx.rotate(arrow.fired ? arrow.angle : bow.angle); // Use arrow.angle if fired
     ctx.fillStyle = 'gray';
     ctx.fillRect(-90, 0, 150, 5);
     ctx.restore();
@@ -93,6 +91,31 @@ function drawTarget() {
     ctx.closePath();
 }
 
+function drawScore() {
+    ctx.fillStyle = 'black';
+    ctx.font = '24px Arial';
+    ctx.fillText(`Score: ${score}`, 10, 30);
+}
+
+function drawTriesLeft() {
+    ctx.fillStyle = 'black';
+    ctx.font = '24px Arial';
+    ctx.fillText(`Tries Left: ${triesLeft}`, 10, 60);
+}
+
+function drawTracer() {
+    if (arrowPath.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(arrowPath[0].x, arrowPath[0].y);
+        for (let i = 1; i < arrowPath.length; i++) {
+            ctx.lineTo(arrowPath[i].x, arrowPath[i].y);
+        }
+        ctx.strokeStyle = 'rgba(255, 165, 0, 0.5)';  // Semi-transparent orange
+        ctx.stroke();
+        ctx.closePath();
+    }
+}
+
 function getEventPosition(e) {
     if (e.touches) {  // If this is a touch event
         return { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -102,15 +125,16 @@ function getEventPosition(e) {
 }
 
 window.addEventListener('mousemove', (e) => {
-    let dx = e.clientX - bow.x;
-    let dy = e.clientY - bow.y;
-    bow.angle = Math.atan2(dy, dx);
-    arrow.angle = bow.angle + Math.PI / 2;  // Adjust the
-    arrow
+    if (!arrow.fired) {  // Only update the angle if the arrow is not fired
+        let dx = e.clientX - bow.x;
+        let dy = e.clientY - bow.y;
+        bow.angle = Math.atan2(dy, dx);
+        arrow.angle = bow.angle + Math.PI / 2;  // Adjust the arrow angle
+    }
 });
 
 window.addEventListener('touchmove', (e) => {
-    if (bow.pulling) {
+    if (bow.pulling && !arrow.fired) {  // Only update the angle if the arrow is not fired
         let pos = getEventPosition(e);
         let dx = pos.x - bow.x;
         let dy = pos.y - bow.y;
@@ -119,19 +143,14 @@ window.addEventListener('touchmove', (e) => {
 });
 
 window.addEventListener('mousedown', () => {
-    if (!arrow.fired) {
-        bow.pulling = true;
-    }
+    bow.pulling = true;
 });
 
 window.addEventListener('touchstart', () => {
-    if (!arrow.fired) {
-        bow.pulling = true;
-    }
+    bow.pulling = true;
 });
 
-
-const gravity = 0.12;  // Adjust this value to simulate gravity
+const gravity = 0.025;  // Adjust this value to simulate gravity
 
 window.addEventListener('mouseup', () => {
     if (bow.pulling) {
@@ -147,7 +166,7 @@ window.addEventListener('mouseup', () => {
 window.addEventListener('touchend', () => {
     if (bow.pulling) {
         arrow.fired = true;
-        arrow.speed =15;  // Adjust this for difficulty
+        arrow.speed = 15;  // Adjust this for difficulty
         arrow.vx = arrow.speed * Math.cos(bow.angle);  // Horizontal component of velocity
         arrow.vy = arrow.speed * Math.sin(bow.angle);  // Vertical component of velocity
         bow.pulling = false;
@@ -160,7 +179,13 @@ function updateArrow() {
         arrow.x += arrow.vx;
         arrow.y += arrow.vy;
         arrow.vy += gravity;  // Apply gravity to the vertical velocity
-        
+
+        // Calculate the angle of the velocity vector
+        arrow.angle = Math.atan2(arrow.vy, arrow.vx);
+
+        // Store the current position in the arrowPath array
+        arrowPath.push({ x: arrow.x, y: arrow.y });
+
         // Check if the arrow hits the target
         if (Math.hypot(arrow.x - target.x, arrow.y - target.y) < target.radius) {
             score += 1;  // Simple scoring, adjust as needed
@@ -185,10 +210,29 @@ function resetArrow() {
     arrow.vx = 0;
     arrow.vy = 0;
     arrow.speed = 0;
+    arrow.angle = bow.angle;  // Reset the angle to the bow's angle
+    arrowPath = [];  // Clear the arrow path
+
+    triesLeft -= 1;  // Decrement the number of tries left
+
+    if (triesLeft <= 0) {
+        setTimeout(() => {
+            alert(`Game Over! Your score: ${score}`);
+            resetGame();
+        }, 500);  // Delay the game over message by 500ms
+    }
 }
 
-function drawScore() {
-    ctx.fillStyle = 'black';
-    ctx.font = '24px Arial';
-    ctx.fillText(`Score: ${score}`, 10, 30);
+function resetGame() {
+    score = 0;
+    triesLeft = 3;
+    targetColor = 'red';
+    arrow.fired = false;
+    arrow.x = bow.x;
+    arrow.y = bow.y;
+    arrow.vx = 0;
+    arrow.vy = 0;
+    arrow.speed = 0;
+    arrow.angle = bow.angle;
+    arrowPath = [];
 }
