@@ -93,7 +93,7 @@ function drawBow() {
     ctx.save();
     ctx.translate(bow.x, bow.y);
     ctx.rotate(bow.angle);
-    ctx.fillStyle = 'brown';
+    ctx.fillStyle = 'red';
     ctx.fillRect(10, -95, 10, 200);
     ctx.restore();
 }
@@ -162,7 +162,7 @@ function drawTracer() {
         for (let i = 1; i < arrowPath.length; i++) {
             ctx.lineTo(arrowPath[i].x, arrowPath[i].y);
         }
-        ctx.strokeStyle = 'rgba(255, 165, 0, 0.5)';  // Semi-transparent orange
+        ctx.strokeStyle = 'rgba(255, 165, 0, 0.7)';  // Semi-transparent orange
         ctx.stroke();
         ctx.closePath();
     }
