@@ -192,39 +192,35 @@ function getEventPosition(e) {
     }
 }
 
-window.addEventListener('mousemove', (e) => {
+function updateBowAngle(e) {
     if (!arrow.fired) {  // Only update the angle if the arrow is not fired
-        let dx = e.clientX - bow.x;
-        let dy = e.clientY - bow.y;
-        bow.angle = Math.atan2(dy, dx);
-        arrow.angle = bow.angle + Math.PI / 2;  // Adjust the arrow angle
-    }
-});
-
-window.addEventListener('touchmove', (e) => {
-    if (bow.pulling && !arrow.fired) {  // Only update the angle if the arrow is not fired
-        let pos = getEventPosition(e);
+        let pos;
+        if (e.touches) {  // If this is a touch event
+            pos = getEventPosition(e.touches[0]);
+        } else {  // If this is a mouse event
+            pos = getEventPosition(e);
+        }
         let dx = pos.x - bow.x;
         let dy = pos.y - bow.y;
         bow.angle = Math.atan2(dy, dx);
+        arrow.angle = bow.angle + Math.PI / 2;  // Adjust the arrow angle
     }
-});
-
-window.addEventListener('mousedown', () => {
-    bow.pulling = true;
-});
-
-window.addEventListener('touchstart', () => {
-    bow.pulling = true;
-});
-
-
-function updateWind() {
-    wind.strength = Math.random() * 2 - 1;  // Random value between -1 and 1 (negative for left, positive for right)
-    wind.direction = Math.random() * Math.PI * 2;  // Random direction in radians
 }
 
-window.addEventListener('mouseup', () => {
+window.addEventListener('mousemove', updateBowAngle);
+window.addEventListener('touchmove', updateBowAngle);
+
+window.addEventListener('mousedown', startPulling);
+window.addEventListener('touchstart', startPulling);
+
+window.addEventListener('mouseup', releaseArrow);
+window.addEventListener('touchend', releaseArrow);
+
+function startPulling() {
+    bow.pulling = true;
+}
+
+function releaseArrow() {
     if (bow.pulling) {
         updateWind();  // Update wind conditions when the arrow is fired
         arrow.fired = true;
@@ -234,19 +230,21 @@ window.addEventListener('mouseup', () => {
         bow.pulling = false;
         arrow.releaseAngle = bow.angle;  // Store the angle at the moment of release
     }
-});
+}
 
-window.addEventListener('touchend', () => {
-    if (bow.pulling) {
-        updateWind();  // Update wind conditions when the arrow is fired
-        arrow.fired = true;
-        arrow.speed = 15;  // Adjust this for difficulty
-        arrow.vx = arrow.speed * Math.cos(bow.angle);  // Horizontal component of velocity
-        arrow.vy = arrow.speed * Math.sin(bow.angle);  // Vertical component of velocity
-        bow.pulling = false;
-        arrow.releaseAngle = bow.angle;  // Store the angle at the moment of release
-    }
-});
+
+
+function updateWind() {
+    wind.strength = Math.random() * 2 - 1;  // Random value between -1 and 1 (negative for left, positive for right)
+    wind.direction = Math.random() * Math.PI * 2;  // Random direction in radians
+}
+
+
+function updateWind() {
+    wind.strength = Math.random() * 2 - 1;  // Random value between -1 and 1 (negative for left, positive for right)
+    wind.direction = Math.random() * Math.PI * 2;  // Random direction in radians
+}
+
 
 function updateArrow() {
     if (arrow.fired) {
