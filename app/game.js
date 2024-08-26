@@ -71,6 +71,35 @@ function resizeCanvas() {
     target.radius = canvas.width * target_ratio;  // Corrected to 2% of canvas width
 }
 
+function drawWindIndicator() {
+    const centerX = canvas.width * 0.9; // Move to the right side of the screen
+    const centerY = canvas.height * 0.1;
+    const arrowLength = wind.strength * 100; // Scale the length based on wind strength
+    const arrowAngle = wind.direction;
+
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(arrowAngle);
+
+    // Draw arrow line
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(arrowLength, 0);
+    ctx.strokeStyle = 'blue';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Draw arrow head
+    ctx.beginPath();
+    ctx.moveTo(arrowLength, 0);
+    ctx.lineTo(arrowLength - 10, -5);
+    ctx.lineTo(arrowLength - 10, 5);
+    ctx.closePath();
+    ctx.fillStyle = 'blue';
+    ctx.fill();
+    ctx.restore();
+}
+
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -85,6 +114,7 @@ function gameLoop() {
     drawTriesLeft();
     drawTracer();
     drawWind();  // Draw wind information
+    drawWindIndicator();  // Draw the wind indicator
 
     if (arrow.fired) {
         updateArrow();
