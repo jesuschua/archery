@@ -1,5 +1,6 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+const gravity = 0.025;  // Adjust this value to simulate gravity
 
 // Resize canvas to fill the window
 canvas.width = window.innerWidth;
@@ -12,6 +13,11 @@ let time = 0;
 let targetColor = 'red';  // Variable to track the target's color
 
 let target_ratio = 0.012;  // 1.2% of canvas width
+
+let wind = {
+    strength: 0,
+    direction: 0 // Angle in radians, where 0 is to the right and π is to the left
+};
 
 let bow = {
     x: 0.3,  // 30% of canvas width
@@ -65,6 +71,35 @@ function resizeCanvas() {
     target.radius = canvas.width * target_ratio;  // Corrected to 2% of canvas width
 }
 
+function drawWindIndicator() {
+    const centerX = canvas.width * 0.9; // Move to the right side of the screen
+    const centerY = canvas.height * 0.1;
+    const arrowLength = wind.strength * 100; // Scale the length based on wind strength
+    const arrowAngle = wind.direction;
+
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(arrowAngle);
+
+    // Draw arrow line
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(arrowLength, 0);
+    ctx.strokeStyle = 'blue';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Draw arrow head
+    ctx.beginPath();
+    ctx.moveTo(arrowLength, 0);
+    ctx.lineTo(arrowLength - 10, -5);
+    ctx.lineTo(arrowLength - 10, 5);
+    ctx.closePath();
+    ctx.fillStyle = 'blue';
+    ctx.fill();
+    ctx.restore();
+}
+
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -78,6 +113,8 @@ function gameLoop() {
     drawScore();
     drawTriesLeft();
     drawTracer();
+    drawWind();  // Draw wind information
+    drawWindIndicator();  // Draw the wind indicator
 
     if (arrow.fired) {
         updateArrow();
@@ -115,34 +152,6 @@ function drawTarget() {
     ctx.closePath();
 }
 
-// Other functions like drawScore, drawTriesLeft, drawTracer, updateArrow
-
-// function drawBow() {
-//     ctx.save();
-//     ctx.translate(bow.x, bow.y);
-//     ctx.rotate(bow.angle);
-//     ctx.fillStyle = 'brown';
-//     ctx.fillRect(10, -95, 10, 200);
-//     ctx.restore();
-// }
-
-// function drawArrow() {
-//     ctx.save();
-//     ctx.translate(arrow.x, arrow.y);
-//     ctx.rotate(arrow.fired ? arrow.angle : bow.angle); // Use arrow.angle if fired
-//     ctx.fillStyle = 'gray';
-//     ctx.fillRect(-90, 0, 150, 5);
-//     ctx.restore();
-// }
-
-// function drawTarget() {
-//     ctx.beginPath();
-//     ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
-//     ctx.fillStyle = targetColor;  // Use the targetColor variable
-//     ctx.fill();
-//     ctx.closePath();
-// }
-
 function drawScore() {
     ctx.fillStyle = 'black';
     ctx.font = '24px Arial';
@@ -166,6 +175,13 @@ function drawTracer() {
         ctx.stroke();
         ctx.closePath();
     }
+}
+
+function drawWind() {
+    ctx.fillStyle = 'black';
+    ctx.font = '24px Arial';
+    ctx.fillText(`Wind: ${wind.strength.toFixed(2)} m/s`, canvas.width - 200, 30);
+    ctx.fillText(`Direction: ${Math.round(wind.direction * 180 / Math.PI)}°`, canvas.width - 200, 60);
 }
 
 function getEventPosition(e) {
@@ -202,10 +218,15 @@ window.addEventListener('touchstart', () => {
     bow.pulling = true;
 });
 
-const gravity = 0.025;  // Adjust this value to simulate gravity
+
+function updateWind() {
+    wind.strength = Math.random() * 2 - 1;  // Random value between -1 and 1 (negative for left, positive for right)
+    wind.direction = Math.random() * Math.PI * 2;  // Random direction in radians
+}
 
 window.addEventListener('mouseup', () => {
     if (bow.pulling) {
+        updateWind();  // Update wind conditions when the arrow is fired
         arrow.fired = true;
         arrow.speed = 30;  // Adjust this for difficulty
         arrow.vx = arrow.speed * Math.cos(bow.angle);  // Horizontal component of velocity
@@ -217,6 +238,7 @@ window.addEventListener('mouseup', () => {
 
 window.addEventListener('touchend', () => {
     if (bow.pulling) {
+        updateWind();  // Update wind conditions when the arrow is fired
         arrow.fired = true;
         arrow.speed = 15;  // Adjust this for difficulty
         arrow.vx = arrow.speed * Math.cos(bow.angle);  // Horizontal component of velocity
@@ -228,6 +250,10 @@ window.addEventListener('touchend', () => {
 
 function updateArrow() {
     if (arrow.fired) {
+        // Apply wind resistance
+        arrow.vx += wind.strength * Math.cos(wind.direction) * 0.05;  // Wind's horizontal effect
+        arrow.vy += wind.strength * Math.sin(wind.direction) * 0.05;  // Wind's vertical effect
+
         arrow.x += arrow.vx;
         arrow.y += arrow.vy;
         arrow.vy += gravity;  // Apply gravity to the vertical velocity
