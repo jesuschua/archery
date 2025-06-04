@@ -240,12 +240,6 @@ function updateWind() {
 }
 
 
-function updateWind() {
-    wind.strength = Math.random() * 2 - 1;  // Random value between -1 and 1 (negative for left, positive for right)
-    wind.direction = Math.random() * Math.PI * 2;  // Random direction in radians
-}
-
-
 function updateArrow() {
     if (arrow.fired) {
         // Apply wind resistance
@@ -262,8 +256,19 @@ function updateArrow() {
         // Store the current position in the arrowPath array
         arrowPath.push({ x: arrow.x, y: arrow.y });
 
-        // Check if the arrow hits the target
-        if (Math.hypot(arrow.x - target.x, arrow.y - target.y) < target.radius) {
+        // Calculate arrow tip and tail positions for better collision detection
+        const arrowLength = 150; // Length of arrow in pixels
+        const arrowTipX = arrow.x + Math.cos(arrow.angle) * (arrowLength / 2);
+        const arrowTipY = arrow.y + Math.sin(arrow.angle) * (arrowLength / 2);
+        const arrowTailX = arrow.x - Math.cos(arrow.angle) * (arrowLength / 2);
+        const arrowTailY = arrow.y - Math.sin(arrow.angle) * (arrowLength / 2);
+
+        // Check if any point along the arrow shaft intersects with the target
+        if (lineCircleIntersection(
+            arrowTailX, arrowTailY, 
+            arrowTipX, arrowTipY, 
+            target.x, target.y, target.radius
+        )) {
             score += 1;  // Simple scoring, adjust as needed
             targetColor = 'green';  // Change target color to green
             setTimeout(() => {
@@ -277,6 +282,49 @@ function updateArrow() {
             resetArrow();
         }
     }
+}
+
+// Function to check if a line segment intersects with a circle
+function lineCircleIntersection(x1, y1, x2, y2, cx, cy, r) {
+    // Vector from line start to circle center
+    const dx = cx - x1;
+    const dy = cy - y1;
+    
+    // Vector representing the line
+    const lineVectorX = x2 - x1;
+    const lineVectorY = y2 - y1;
+    
+    // Length of line
+    const lineLength = Math.sqrt(lineVectorX * lineVectorX + lineVectorY * lineVectorY);
+    
+    // Normalize line vector
+    const unitLineVectorX = lineVectorX / lineLength;
+    const unitLineVectorY = lineVectorY / lineLength;
+    
+    // Project vector from line start to circle center onto the line vector
+    const projection = dx * unitLineVectorX + dy * unitLineVectorY;
+    
+    // Get the closest point on the line to the circle center
+    let closestX, closestY;
+    
+    // Check if projection is outside the line segment
+    if (projection < 0) {
+        closestX = x1;
+        closestY = y1;
+    } else if (projection > lineLength) {
+        closestX = x2;
+        closestY = y2;
+    } else {
+        // Point is on the line segment
+        closestX = x1 + unitLineVectorX * projection;
+        closestY = y1 + unitLineVectorY * projection;
+    }
+    
+    // Calculate distance from closest point to circle center
+    const distance = Math.sqrt((closestX - cx) * (closestX - cx) + (closestY - cy) * (closestY - cy));
+    
+    // If distance is less than or equal to radius, there is an intersection
+    return distance <= r;
 }
 
 function resetArrow() {
