@@ -145,11 +145,25 @@ function drawArrow() {
 }
 
 function drawTarget() {
-    ctx.beginPath();
-    ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
-    ctx.fillStyle = targetColor;
-    ctx.fill();
-    ctx.closePath();
+    const colors = ["#FF0000", "#FFFFFF", "#FF0000", "#FFFFFF", "#000000"]; // Red, White, Red, White, Black for bullseye
+    const ringSize = target.radius / colors.length;
+
+    for (let i = 0; i < colors.length; i++) {
+        ctx.beginPath();
+        ctx.arc(target.x, target.y, target.radius - (i * ringSize), 0, Math.PI * 2);
+        ctx.fillStyle = colors[i];
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    // Keep the hit-feedback logic if desired, or integrate it differently
+    if (targetColor === 'green') { // Example: if target was hit, flash the center
+        ctx.beginPath();
+        ctx.arc(target.x, target.y, ringSize, 0, Math.PI * 2);
+        ctx.fillStyle = 'lime';
+        ctx.fill();
+        ctx.closePath();
+    }
 }
 
 function drawScore() {
