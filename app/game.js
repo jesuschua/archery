@@ -3,12 +3,12 @@ import Bow from './entities/bow.js';
 import Arrow from './entities/Arrow.js';
 import Target from './entities/target.js';
 import { drawBow, drawArrow, drawTarget } from './systems/rendering.js';
-import { setupInputHandlers } from './systems/input.js';
+import { setupInputHandlers, setInputEnabled } from './systems/input.js';
 import { updateArrow } from './systems/gameLogic.js';
 import { randomWind } from './utils/gameUtils.js';
 import { drawBackground } from './systems/background.js';
 import { drawWind, drawWindIndicator } from './systems/wind.js';
-import { drawScore, drawTriesLeft } from './systems/ui.js';
+import { drawScore, drawTriesLeft, drawRoundBanner, drawEndOfRoundBanner, createPlayAgainButton, removePlayAgainButton } from './systems/ui.js';
 import { drawTracer } from './systems/tracer.js';
 
 const canvas = document.getElementById('gameCanvas');
@@ -36,6 +36,7 @@ let arrowPath = [];
 let leaves = Array.from({ length: 15 }, () => createLeaf());
 let windGaugeFlapAngle = 0;
 let windGaugeFlapSpeed = 0;
+let showEndOfRound = false;
 
 function createLeaf() {
     return {
@@ -91,13 +92,18 @@ function resetArrow() {
     arrowPath = [];
     triesLeft -= 1;
     if (triesLeft <= 0) {
-        setTimeout(() => {
-            alert(`Game Over! Your score: ${score}`);
-            resetGame();
-        }, 500);
+        showEndOfRound = true;
+        setInputEnabled(false); // Disable game input when round ends
     } else {
-        updateWind(); // Only update wind after the arrow is reset (i.e., after a shot is finished)
+        updateWind();
     }
+}
+
+function startNewRound() {
+    showEndOfRound = false;
+    removePlayAgainButton();
+    resetGame();
+    setInputEnabled(true);
 }
 
 function resetGame() {
@@ -197,11 +203,21 @@ function gameLoop() {
     drawTarget(ctx, target, targetColor);
     drawScore(ctx, score);
     drawTriesLeft(ctx, triesLeft);
+    drawRoundBanner(ctx, triesLeft);
     drawTracer(ctx, arrowPath);
     drawWind(ctx, canvas, wind);
     drawWindGauge(ctx, canvas, wind, time);
-    updateLeaves();
-    updateArrow(arrow, wind, gravity, arrowPath, target, onArrowHit, onArrowMiss);
+    updateLeaves();    if (showEndOfRound) {
+        drawEndOfRoundBanner(ctx, score);
+        // Create the Play Again button if it doesn't exist
+        if (!document.getElementById('play-again-btn')) {
+            createPlayAgainButton(startNewRound);
+        }
+    } else {
+        // Remove button if present and update arrow when game is active
+        removePlayAgainButton();
+        updateArrow(arrow, wind, gravity, arrowPath, target, onArrowHit, onArrowMiss);
+    }
     requestAnimationFrame(gameLoop);
 }
 
