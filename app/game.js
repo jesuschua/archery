@@ -1,7 +1,7 @@
 // Import modules
-import Bow from './entities/Bow.js';
-import Arrow from './entities/Arrow.js';
-import Target from './entities/Target.js';
+import Bow from './entities/bow.js';
+import Arrow from './entities/arrow.js';
+import Target from './entities/target.js';
 import { drawBow, drawArrow, drawTarget } from './systems/rendering.js';
 import { setupInputHandlers, setInputEnabled } from './systems/input.js';
 import { updateArrow, getReactionMessage } from './systems/gameLogic.js';
