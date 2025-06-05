@@ -430,6 +430,32 @@ function drawSpeechBubble(ctx, canvas, message, opacity) {
     ctx.restore();
 }
 
+export function getSpotterHitbox(canvas) {
+    // Calculate spotter position (same as in drawSpotter)
+    const poleX = canvas.width * 0.85;
+    const spotterX = poleX - 20;
+    const spotterY = canvas.height * 0.75 - 15;
+    
+    // Spotter dimensions for hitbox
+    const headRadius = 4;
+    const bodyHeight = 12;
+    const bodyWidth = 6;
+    const legLength = 10;
+    
+    // Total character dimensions for hitbox
+    const totalWidth = Math.max(bodyWidth, headRadius * 2);
+    const totalHeight = headRadius * 2 + bodyHeight + legLength;
+    
+    return {
+        x: spotterX,
+        y: spotterY - headRadius, // Top of head
+        width: totalWidth,
+        height: totalHeight,
+        centerX: spotterX,
+        centerY: spotterY + (totalHeight / 2) - headRadius
+    };
+}
+
 export function drawReactionMessage(ctx) {
     const canvas = ctx.canvas;
     

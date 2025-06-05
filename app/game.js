@@ -4,7 +4,7 @@ import Arrow from './entities/arrow.js';
 import Target from './entities/target.js';
 import { drawBow, drawArrow, drawTarget } from './systems/rendering.js';
 import { setupInputHandlers, setInputEnabled, isHelperModeEnabled } from './systems/input.js';
-import { updateArrow, getReactionMessage } from './systems/gameLogic.js';
+import { updateArrow, getReactionMessage, getSpotterHitMessage, getSpotterEndRoundMessage } from './systems/gameLogic.js';
 import { randomWind } from './utils/gameUtils.js';
 import { drawBackground } from './systems/background.js';
 import { drawWind, drawWindIndicator } from './systems/wind.js';
@@ -94,6 +94,14 @@ function onArrowMiss(distance) {
     resetArrow();
 }
 
+function onSpotterHit() {
+    // Show special spotter hit message
+    const spotterMessage = getSpotterHitMessage();
+    showReactionMessage(spotterMessage);
+    
+    resetArrow();
+}
+
 function resetArrow() {
     arrow.fired = false;
     arrow.x = bow.x;
@@ -106,6 +114,12 @@ function resetArrow() {
     clearSparkles(); // Clear sparkle effects when arrow resets
     triesLeft -= 1;
     if (triesLeft <= 0) {
+        // Check for special end-of-round spotter messages
+        const specialMessage = getSpotterEndRoundMessage(score, 5);
+        if (specialMessage) {
+            showReactionMessage(specialMessage);
+        }
+        
         showEndOfRound = true;
         setInputEnabled(false); // Disable game input when round ends
     } else {
@@ -295,7 +309,7 @@ function drawWindsock(ctx, canvas, wind, time) {
 }
 
 function gameLoop() {
-    drawBackground(ctx, canvas);
+    drawBackground(ctx, canvas, time);
     time += 1;
     target.update(time, canvas.height);
     drawLeaves(ctx);
@@ -327,11 +341,10 @@ function gameLoop() {
         // Create the Play Again button if it doesn't exist
         if (!document.getElementById('play-again-btn')) {
             createPlayAgainButton(startNewRound);
-        }
-    } else {
+        }    } else {
         // Remove button if present and update arrow when game is active
         removePlayAgainButton();
-        updateArrow(arrow, wind, gravity, arrowPath, target, onArrowHit, onArrowMiss);
+        updateArrow(arrow, wind, gravity, arrowPath, target, onArrowHit, onArrowMiss, canvas, onSpotterHit);
     }
     requestAnimationFrame(gameLoop);
 }

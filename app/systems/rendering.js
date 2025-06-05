@@ -6,30 +6,97 @@ export function drawBow(ctx, bow) {
     ctx.translate(bow.x, bow.y);
     ctx.rotate(bow.angle);
     
+    // Update pull distance animation
+    if (bow.pulling) {
+        bow.pullDistance = Math.min(bow.pullDistance + bow.pullAnimationSpeed, 1);
+    } else {
+        bow.pullDistance = Math.max(bow.pullDistance - bow.pullAnimationSpeed * 2, 0);
+    }
+    
+    // Calculate current pull distance in pixels
+    const currentPull = bow.pullDistance * bow.maxPullDistance;
+    
     // Clean, minimalist bow design with orange gradients
     const bowGradient = ctx.createLinearGradient(-2.5, -50, 7.5, 50);
     bowGradient.addColorStop(0, '#FF8C42');  // Vibrant orange
     bowGradient.addColorStop(0.5, '#FF7A28'); // Mid orange
     bowGradient.addColorStop(1, '#E85A00');   // Deeper orange
     
-    // Main bow body - sleek and minimal
+    // Main bow body - sleek and minimal with slight bend when pulled
     ctx.fillStyle = bowGradient;
     ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
     ctx.shadowBlur = 4;
     ctx.shadowOffsetX = 1;
     ctx.shadowOffsetY = 1;
-    ctx.fillRect(4, -47.5, 7, 95);
     
-    // Clean bow string - minimal white line
+    if (bow.pulling && bow.pullDistance > 0.3) {
+        // Slight bow bend when pulling - make the bow curve slightly backward
+        ctx.save();
+        ctx.scale(1 + bow.pullDistance * 0.1, 1); // Slight horizontal stretching effect
+        ctx.fillRect(4, -47.5, 7, 95);
+        ctx.restore();
+    } else {
+        ctx.fillRect(4, -47.5, 7, 95);
+    }
+    
+    // Animated bow string - pulls back when drawing
     ctx.shadowColor = 'transparent';
     ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.5 + bow.pullDistance * 0.5; // String gets slightly thicker when taut
+    
+    // String with dynamic curvature based on pull
+    const stringCurve = -10 - currentPull; // String curves back more when pulled
     ctx.beginPath();
     ctx.moveTo(5, -45);
-    ctx.quadraticCurveTo(-10, 0, 5, 45);
-    ctx.stroke();
+    
+    if (bow.pulling && bow.pullDistance > 0.1) {
+        // Draw taut string with nocking point when pulling
+        const nockPointY = 0; // Center of bow where arrow nocks
+        const nockPointX = stringCurve;
+        
+        // Upper string segment
+        ctx.lineTo(nockPointX, nockPointY);
+        // Lower string segment  
+        ctx.lineTo(5, 45);
+        
+        // Add slight vibration effect when string is fully drawn
+        if (bow.pullDistance > 0.8) {
+            const vibration = Math.sin(Date.now() * 0.05) * 0.5;
+            ctx.save();
+            ctx.translate(vibration, 0);
+            ctx.stroke();
+            ctx.restore();
+        } else {
+            ctx.stroke();
+        }
+        
+        // Draw nocking point indicator
+        ctx.fillStyle = '#FFE4CC';
+        ctx.beginPath();
+        ctx.arc(nockPointX, nockPointY, 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+    } else {
+        // Relaxed string curve
+        ctx.quadraticCurveTo(stringCurve, 0, 5, 45);
+        ctx.stroke();
+    }
+    
+    // Add subtle glow effect when bow is fully drawn
+    if (bow.pullDistance > 0.9) {
+        ctx.shadowColor = '#FF8C42';
+        ctx.shadowBlur = 8;
+        ctx.strokeStyle = 'rgba(255, 140, 66, 0.6)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(5, -45);
+        ctx.lineTo(stringCurve, 0);
+        ctx.lineTo(5, 45);
+        ctx.stroke();
+    }
     
     // Grip area - subtle orange accent
+    ctx.shadowColor = 'transparent';
     ctx.fillStyle = '#D14500';
     ctx.fillRect(3, -7.5, 9, 15);
     
