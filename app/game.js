@@ -72,36 +72,91 @@ function resizeCanvas() {
 }
 
 function drawWindIndicator() {
-    const centerX = canvas.width * 0.9; // Move to the right side of the screen
-    const centerY = canvas.height * 0.1;
-    const arrowLength = wind.strength * 100; // Scale the length based on wind strength
+    const centerX = canvas.width * 0.85;
+    const centerY = canvas.height * 0.15;
+    const maxArrowLength = 50;
+    const arrowLength = Math.abs(wind.strength) * maxArrowLength;
     const arrowAngle = wind.direction;
 
     ctx.save();
+    
+    // Draw compass circle
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.fill();
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
     ctx.translate(centerX, centerY);
     ctx.rotate(arrowAngle);
 
-    // Draw arrow line
+    // Draw arrow with varying color based on strength
+    const intensity = Math.abs(wind.strength);
+    const red = Math.floor(255 * intensity);
+    const blue = Math.floor(255 * (1 - intensity));
+    
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(arrowLength, 0);
-    ctx.strokeStyle = 'blue';
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = `rgb(${red}, 100, ${blue})`;
+    ctx.lineWidth = 4;
     ctx.stroke();
 
-    // Draw arrow head
-    ctx.beginPath();
-    ctx.moveTo(arrowLength, 0);
-    ctx.lineTo(arrowLength - 10, -5);
-    ctx.lineTo(arrowLength - 10, 5);
-    ctx.closePath();
-    ctx.fillStyle = 'blue';
-    ctx.fill();
+    // Arrow head
+    if (arrowLength > 5) {
+        ctx.beginPath();
+        ctx.moveTo(arrowLength, 0);
+        ctx.lineTo(arrowLength - 10, -5);
+        ctx.lineTo(arrowLength - 10, 5);
+        ctx.closePath();
+        ctx.fillStyle = `rgb(${red}, 100, ${blue})`;
+        ctx.fill();
+    }
+    
     ctx.restore();
 }
 
+// Add a background gradient function
+function drawBackground() {
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, '#87CEEB'); // Sky blue
+    gradient.addColorStop(0.7, '#98FB98'); // Pale green
+    gradient.addColorStop(1, '#228B22'); // Forest green
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Add some clouds
+    drawClouds();
+}
+
+function drawClouds() {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    
+    // Cloud 1
+    drawCloud(canvas.width * 0.2, canvas.height * 0.2, 40);
+    
+    // Cloud 2
+    drawCloud(canvas.width * 0.6, canvas.height * 0.15, 35);
+    
+    // Cloud 3
+    drawCloud(canvas.width * 0.8, canvas.height * 0.25, 30);
+}
+
+function drawCloud(x, y, size) {
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.arc(x + size * 0.6, y, size * 0.8, 0, Math.PI * 2);
+    ctx.arc(x + size * 1.2, y, size, 0, Math.PI * 2);
+    ctx.arc(x + size * 0.6, y - size * 0.5, size * 0.7, 0, Math.PI * 2);
+    ctx.fill();
+}
+
 function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Draw background first
+    drawBackground();
 
     time += 1;
 
@@ -113,8 +168,8 @@ function gameLoop() {
     drawScore();
     drawTriesLeft();
     drawTracer();
-    drawWind();  // Draw wind information
-    drawWindIndicator();  // Draw the wind indicator
+    drawWind();
+    drawWindIndicator();
 
     if (arrow.fired) {
         updateArrow();
@@ -130,22 +185,76 @@ function drawBow() {
     ctx.save();
     ctx.translate(bow.x, bow.y);
     ctx.rotate(bow.angle);
-    ctx.fillStyle = 'red';
-    ctx.fillRect(10, -95, 10, 200);
+    
+    // Draw bow body with gradient
+    const bowGradient = ctx.createLinearGradient(-5, -100, 15, 100);
+    bowGradient.addColorStop(0, '#8B4513');
+    bowGradient.addColorStop(0.5, '#A0522D');
+    bowGradient.addColorStop(1, '#654321');
+    
+    ctx.fillStyle = bowGradient;
+    ctx.fillRect(8, -95, 14, 190);
+    
+    // Add bow string
+    ctx.strokeStyle = '#F5F5DC';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(10, -90);
+    ctx.quadraticCurveTo(-20, 0, 10, 90);
+    ctx.stroke();
+    
+    // Add grip area
+    ctx.fillStyle = '#654321';
+    ctx.fillRect(6, -15, 18, 30);
+    
     ctx.restore();
 }
 
 function drawArrow() {
     ctx.save();
     ctx.translate(arrow.x, arrow.y);
-    ctx.rotate(arrow.fired ? arrow.angle : bow.angle); // Use arrow.angle if fired
-    ctx.fillStyle = 'gray';
-    ctx.fillRect(-90, 0, 150, 5);
+    ctx.rotate(arrow.fired ? arrow.angle : bow.angle);
+    
+    // Arrow shaft with gradient - flipped coordinates
+    const shaftGradient = ctx.createLinearGradient(-90, 0, 90, 0);
+    shaftGradient.addColorStop(0, '#CD853F');
+    shaftGradient.addColorStop(0.2, '#D2691E');
+    shaftGradient.addColorStop(1, '#8B4513');
+    
+    ctx.fillStyle = shaftGradient;
+    ctx.fillRect(-90, -2, 180, 4);
+    
+    // Arrow tip (metal) - now at the back in drawing coords but front in travel direction
+    ctx.fillStyle = '#C0C0C0';
+    ctx.beginPath();
+    ctx.moveTo(-90, 0);
+    ctx.lineTo(-75, -4);
+    ctx.lineTo(-75, 4);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Arrow fletching - now at the front in drawing coords but back in travel direction
+    ctx.fillStyle = '#FF4500';
+    ctx.beginPath();
+    ctx.moveTo(90, 0);
+    ctx.lineTo(75, -8);
+    ctx.lineTo(80, 0);
+    ctx.lineTo(75, 8);
+    ctx.closePath();
+    ctx.fill();
+    
     ctx.restore();
 }
 
 function drawTarget() {
-    const colors = ["#FF0000", "#FFFFFF", "#FF0000", "#FFFFFF", "#000000"]; // Red, White, Red, White, Black for bullseye
+    // Add shadow
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetX = 5;
+    ctx.shadowOffsetY = 5;
+    
+    const colors = ["#FF0000", "#FFFFFF", "#FF0000", "#FFFFFF", "#FFD700"]; // Gold center
     const ringSize = target.radius / colors.length;
 
     for (let i = 0; i < colors.length; i++) {
@@ -153,49 +262,77 @@ function drawTarget() {
         ctx.arc(target.x, target.y, target.radius - (i * ringSize), 0, Math.PI * 2);
         ctx.fillStyle = colors[i];
         ctx.fill();
+        
+        // Add ring borders
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.stroke();
         ctx.closePath();
     }
+    
+    ctx.restore();
 
-    // Keep the hit-feedback logic if desired, or integrate it differently
-    if (targetColor === 'green') { // Example: if target was hit, flash the center
+    // Hit feedback with glow effect
+    if (targetColor === 'green') {
+        ctx.save();
+        ctx.shadowColor = 'lime';
+        ctx.shadowBlur = 20;
         ctx.beginPath();
         ctx.arc(target.x, target.y, ringSize, 0, Math.PI * 2);
         ctx.fillStyle = 'lime';
         ctx.fill();
         ctx.closePath();
+        ctx.restore();
     }
 }
 
 function drawScore() {
-    ctx.fillStyle = 'black';
-    ctx.font = '24px Arial';
+    // Add background for better readability
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(5, 5, 150, 35);
+    
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 24px Arial';
     ctx.fillText(`Score: ${score}`, 10, 30);
 }
 
 function drawTriesLeft() {
-    ctx.fillStyle = 'black';
-    ctx.font = '24px Arial';
-    ctx.fillText(`Tries Left: ${triesLeft}`, 10, 60);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(5, 45, 180, 35);
+    
+    ctx.fillStyle = triesLeft <= 1 ? '#FF4444' : '#FFFFFF';
+    ctx.font = 'bold 24px Arial';
+    ctx.fillText(`Tries Left: ${triesLeft}`, 10, 70);
 }
 
 function drawTracer() {
     if (arrowPath.length > 1) {
+        ctx.save();
+        ctx.shadowColor = 'orange';
+        ctx.shadowBlur = 5;
+        
         ctx.beginPath();
         ctx.moveTo(arrowPath[0].x, arrowPath[0].y);
         for (let i = 1; i < arrowPath.length; i++) {
             ctx.lineTo(arrowPath[i].x, arrowPath[i].y);
         }
-        ctx.strokeStyle = 'rgba(255, 165, 0, 0.7)';  // Semi-transparent orange
+        ctx.strokeStyle = 'rgba(255, 165, 0, 0.8)';
+        ctx.lineWidth = 3;
         ctx.stroke();
         ctx.closePath();
+        ctx.restore();
     }
 }
 
 function drawWind() {
-    ctx.fillStyle = 'black';
-    ctx.font = '24px Arial';
-    ctx.fillText(`Wind: ${wind.strength.toFixed(2)} m/s`, canvas.width - 200, 30);
-    ctx.fillText(`Direction: ${Math.round(wind.direction * 180 / Math.PI)}°`, canvas.width - 200, 60);
+    // Background for wind info
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(canvas.width - 220, 5, 215, 70);
+    
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 20px Arial';
+    ctx.fillText(`Wind: ${wind.strength.toFixed(2)} m/s`, canvas.width - 210, 30);
+    ctx.fillText(`Direction: ${Math.round(wind.direction * 180 / Math.PI)}°`, canvas.width - 210, 55);
 }
 
 function getEventPosition(e) {
@@ -217,7 +354,7 @@ function updateBowAngle(e) {
         let dx = pos.x - bow.x;
         let dy = pos.y - bow.y;
         bow.angle = Math.atan2(dy, dx);
-        arrow.angle = bow.angle + Math.PI / 2;  // Adjust the arrow angle
+        arrow.angle = bow.angle;  // Remove the incorrect PI/2 adjustment
     }
 }
 
