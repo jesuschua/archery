@@ -1,4 +1,7 @@
-// Background rendering system for the archery game - Orange & White Minimalist Theme
+// Background rendering system for the archery game - Orange & White Minimalist Theme with Mobile Support
+
+import { responsive } from '../utils/responsiveUtils.js';
+
 export function drawBackground(ctx, canvas, time = 0) {
     // Simple gradient background - Orange & White minimalist theme
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
@@ -26,13 +29,16 @@ function drawIslandLighthouseSilhouette(ctx, canvas, time) {
     ctx.fillStyle = silhouetteColor;
     ctx.globalAlpha = 0.4; // Semi-transparent for distance effect
     
+    // Use responsive scaling for island dimensions
+    const islandHeight = 40 * responsive.scaleFactor;
+    
     ctx.beginPath();
-    // Island shape - organic and mountainous
+    // Island shape - organic and mountainous with responsive scaling
     ctx.moveTo(0, horizonY);
-    ctx.quadraticCurveTo(canvas.width * 0.1, horizonY - 40, canvas.width * 0.2, horizonY - 30);
-    ctx.quadraticCurveTo(canvas.width * 0.25, horizonY - 50, canvas.width * 0.3, horizonY - 45);
-    ctx.quadraticCurveTo(canvas.width * 0.35, horizonY - 60, canvas.width * 0.4, horizonY - 35);
-    ctx.quadraticCurveTo(canvas.width * 0.45, horizonY - 20, canvas.width * 0.5, horizonY);
+    ctx.quadraticCurveTo(canvas.width * 0.1, horizonY - islandHeight, canvas.width * 0.2, horizonY - islandHeight * 0.75);
+    ctx.quadraticCurveTo(canvas.width * 0.25, horizonY - islandHeight * 1.25, canvas.width * 0.3, horizonY - islandHeight * 1.125);
+    ctx.quadraticCurveTo(canvas.width * 0.35, horizonY - islandHeight * 1.5, canvas.width * 0.4, horizonY - islandHeight * 0.875);
+    ctx.quadraticCurveTo(canvas.width * 0.45, horizonY - islandHeight * 0.5, canvas.width * 0.5, horizonY);
     ctx.lineTo(0, horizonY);
     ctx.closePath();
     ctx.fill();
@@ -42,30 +48,34 @@ function drawIslandLighthouseSilhouette(ctx, canvas, time) {
     ctx.fillStyle = silhouetteColor;
     
     const poleX = canvas.width * 0.85; // Same as windsock pole position
+    const localIslandWidth = 150 * responsive.scaleFactor;
+    const localIslandHeight = 50 * responsive.scaleFactor;
     
     ctx.beginPath();
-    // Local island - larger hill to accommodate both mast and lighthouse
-    ctx.moveTo(poleX - 150, horizonY);
-    ctx.quadraticCurveTo(poleX - 120, horizonY - 30, poleX - 80, horizonY - 35);
-    ctx.quadraticCurveTo(poleX - 40, horizonY - 45, poleX, horizonY - 50); // Peak under mast
-    ctx.quadraticCurveTo(poleX + 40, horizonY - 45, poleX + 80, horizonY - 35);
-    ctx.quadraticCurveTo(poleX + 120, horizonY - 25, poleX + 150, horizonY);
+    // Local island - larger hill to accommodate both mast and lighthouse with responsive scaling
+    ctx.moveTo(poleX - localIslandWidth, horizonY);
+    ctx.quadraticCurveTo(poleX - localIslandWidth * 0.8, horizonY - localIslandHeight * 0.6, poleX - localIslandWidth * 0.53, horizonY - localIslandHeight * 0.7);
+    ctx.quadraticCurveTo(poleX - localIslandWidth * 0.27, horizonY - localIslandHeight * 0.9, poleX, horizonY - localIslandHeight); // Peak under mast
+    ctx.quadraticCurveTo(poleX + localIslandWidth * 0.27, horizonY - localIslandHeight * 0.9, poleX + localIslandWidth * 0.53, horizonY - localIslandHeight * 0.7);    ctx.quadraticCurveTo(poleX + localIslandWidth * 0.27, horizonY - localIslandHeight * 0.9, poleX + localIslandWidth * 0.53, horizonY - localIslandHeight * 0.7);
+    ctx.quadraticCurveTo(poleX + localIslandWidth * 0.8, horizonY - localIslandHeight * 0.5, poleX + localIslandWidth, horizonY);
     ctx.lineTo(canvas.width, horizonY);
     ctx.lineTo(canvas.width, canvas.height);
-    ctx.lineTo(poleX - 150, canvas.height);
+    ctx.lineTo(poleX - localIslandWidth, canvas.height);
     ctx.closePath();
     ctx.fill();
     
     // Draw traditional lighthouse with animated light
-    drawTraditionalLighthouse(ctx, poleX - 60, horizonY - 35, time);
+    drawTraditionalLighthouse(ctx, poleX - 60 * responsive.scaleFactor, horizonY - localIslandHeight * 0.7, time);
     
-    // Add some distant mountains/hills for depth
+    // Add some distant mountains/hills for depth with responsive scaling
     ctx.globalAlpha = 0.2;
     ctx.fillStyle = silhouetteColor;
+    const mountainHeight = 25 * responsive.scaleFactor;
+    
     ctx.beginPath();
     ctx.moveTo(canvas.width * 0.6, horizonY);
-    ctx.quadraticCurveTo(canvas.width * 0.7, horizonY - 20, canvas.width * 0.8, horizonY - 15);
-    ctx.quadraticCurveTo(canvas.width * 0.9, horizonY - 25, canvas.width, horizonY - 10);
+    ctx.quadraticCurveTo(canvas.width * 0.7, horizonY - mountainHeight * 0.8, canvas.width * 0.8, horizonY - mountainHeight * 0.6);
+    ctx.quadraticCurveTo(canvas.width * 0.9, horizonY - mountainHeight, canvas.width, horizonY - mountainHeight * 0.4);
     ctx.lineTo(canvas.width, horizonY);
     ctx.closePath();
     ctx.fill();
@@ -78,11 +88,11 @@ function drawTraditionalLighthouse(ctx, x, y, time) {
     
     const silhouetteColor = '#2C3E50';
     
-    // Lighthouse dimensions
-    const baseWidth = 12;
-    const topWidth = 8;
-    const height = 50;
-    const lampRoomHeight = 12;
+    // Lighthouse dimensions with responsive scaling
+    const baseWidth = 12 * responsive.scaleFactor;
+    const topWidth = 8 * responsive.scaleFactor;
+    const height = 50 * responsive.scaleFactor;
+    const lampRoomHeight = 12 * responsive.scaleFactor;
     
     // Draw lighthouse base (slightly wider bottom tapering to top)
     ctx.globalAlpha = 0.7;
@@ -97,38 +107,43 @@ function drawTraditionalLighthouse(ctx, x, y, time) {
     ctx.closePath();
     ctx.fill();
     
-    // Add horizontal stripes for traditional lighthouse look
+    // Add horizontal stripes for traditional lighthouse look with responsive sizing
     ctx.fillStyle = '#FFFFFF';
     ctx.globalAlpha = 0.1;
+    const stripeHeight = 3 * responsive.scaleFactor;
     // White stripes
-    ctx.fillRect(x - baseWidth/2 + 1, y - height * 0.2, baseWidth - 2, 3);
-    ctx.fillRect(x - baseWidth/2 + 1, y - height * 0.5, baseWidth - 2, 3);
-    ctx.fillRect(x - baseWidth/2 + 1, y - height * 0.8, baseWidth - 2, 3);
+    ctx.fillRect(x - baseWidth/2 + responsive.scaleFactor, y - height * 0.2, baseWidth - 2 * responsive.scaleFactor, stripeHeight);
+    ctx.fillRect(x - baseWidth/2 + responsive.scaleFactor, y - height * 0.5, baseWidth - 2 * responsive.scaleFactor, stripeHeight);
+    ctx.fillRect(x - baseWidth/2 + responsive.scaleFactor, y - height * 0.8, baseWidth - 2 * responsive.scaleFactor, stripeHeight);
     
     // Lamp room (lantern at top)
     ctx.globalAlpha = 0.8;
     ctx.fillStyle = silhouetteColor;
-    ctx.fillRect(x - (topWidth + 4)/2, y - height - lampRoomHeight, topWidth + 4, lampRoomHeight);
+    const lampRoomWidth = topWidth + 4 * responsive.scaleFactor;
+    ctx.fillRect(x - lampRoomWidth/2, y - height - lampRoomHeight, lampRoomWidth, lampRoomHeight);
     
     // Lamp room windows (glass panels)
     ctx.fillStyle = '#FFE4CC';
     ctx.globalAlpha = 0.3;
-    ctx.fillRect(x - topWidth/2 + 1, y - height - lampRoomHeight + 2, topWidth - 2, lampRoomHeight - 4);
+    ctx.fillRect(x - topWidth/2 + responsive.scaleFactor, y - height - lampRoomHeight + 2 * responsive.scaleFactor, 
+                topWidth - 2 * responsive.scaleFactor, lampRoomHeight - 4 * responsive.scaleFactor);
     
     // Roof/cap
     ctx.globalAlpha = 0.9;
     ctx.fillStyle = silhouetteColor;
+    const roofWidth = topWidth + 6 * responsive.scaleFactor;
+    const roofHeight = 8 * responsive.scaleFactor;
     ctx.beginPath();
-    ctx.moveTo(x - (topWidth + 6)/2, y - height - lampRoomHeight);
-    ctx.lineTo(x, y - height - lampRoomHeight - 8);
-    ctx.lineTo(x + (topWidth + 6)/2, y - height - lampRoomHeight);
+    ctx.moveTo(x - roofWidth/2, y - height - lampRoomHeight);
+    ctx.lineTo(x, y - height - lampRoomHeight - roofHeight);
+    ctx.lineTo(x + roofWidth/2, y - height - lampRoomHeight);
     ctx.closePath();
     ctx.fill();
     
-    // Animated rotating light beam
+    // Animated rotating light beam with responsive sizing
     const lightCenterX = x;
     const lightCenterY = y - height - lampRoomHeight/2;
-    const beamLength = 80;
+    const beamLength = 80 * responsive.scaleFactor;
     const rotationSpeed = 0.003; // Slow rotation
     const currentAngle = time * rotationSpeed;
     

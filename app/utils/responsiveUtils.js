@@ -3,10 +3,24 @@
 export class ResponsiveManager {
     constructor() {
         this.updateScreenInfo();
-        // Update on resize/orientation change
+        this.orientationChangeInProgress = false;
+        
+        // Update on resize
         window.addEventListener('resize', () => this.updateScreenInfo());
+        
+        // Enhanced orientation change handling
         window.addEventListener('orientationchange', () => {
+            this.orientationChangeInProgress = true;
+            
+            // First immediate update
+            this.updateScreenInfo();
+            
+            // Then follow-up updates to ensure everything settles
             setTimeout(() => this.updateScreenInfo(), 100);
+            setTimeout(() => {
+                this.updateScreenInfo();
+                this.orientationChangeInProgress = false;
+            }, 500);
         });
     }
     
@@ -46,12 +60,12 @@ export class ResponsiveManager {
         }
         return 0;
     }
-    
-    // Get responsive dimensions for UI elements
+      // Get responsive dimensions for UI elements
     getGamePanelConfig() {
         if (this.isMobile) {
-            const baseWidth = this.isSmallMobile ? 200 : 240;
-            const baseHeight = this.isSmallMobile ? 100 : 120;
+            // Create a wider panel for mobile to accommodate all indicators
+            const baseWidth = this.isSmallMobile ? 300 : 340;
+            const baseHeight = this.isSmallMobile ? 110 : 130;
             
             return {
                 x: 10 * this.scaleFactor,
@@ -81,15 +95,16 @@ export class ResponsiveManager {
             }
         };
     }
-    
-    getWindPanelConfig() {
+      getWindPanelConfig() {
         if (this.isMobile) {
+            // We don't need a separate wind panel anymore as we'll integrate it
+            // But keep this for backward compatibility
             const baseWidth = this.isSmallMobile ? 140 : 160;
             const baseHeight = this.isSmallMobile ? 50 : 60;
             
             return {
                 x: this.screenWidth - (baseWidth * this.scaleFactor) - (10 * this.scaleFactor),
-                y: this.safeAreaTop + 10,
+                y: this.safeAreaTop + (10 + baseHeight) * this.scaleFactor, // Position below the space where it was
                 width: baseWidth * this.scaleFactor,
                 height: baseHeight * this.scaleFactor,
                 fontSize: {
@@ -120,19 +135,20 @@ export class ResponsiveManager {
             radius: baseRadius * this.scaleFactor,
             arrowLength: (this.isMobile ? 35 : 50) * this.scaleFactor
         };
-    }
-    
-    getBannerConfig() {
+    }      getBannerConfig() {
         if (this.isMobile) {
+            // Calculate width that works well on any device
             const baseWidth = Math.min(this.screenWidth * 0.9, 280);
             const baseHeight = this.isSmallMobile ? 40 : 50;
+            const gamePanelConfig = this.getGamePanelConfig();
             
             return {
-                x: this.screenWidth / 2 - baseWidth / 2,
-                y: this.safeAreaTop + 20,
-                width: baseWidth,
-                height: baseHeight,
-                fontSize: this.isSmallMobile ? 18 : 24
+                x: this.screenWidth / 2 - (baseWidth * this.scaleFactor) / 2,
+                // Position below the game panel with some spacing
+                y: gamePanelConfig.y + gamePanelConfig.height + 20 * this.scaleFactor,
+                width: baseWidth * this.scaleFactor,
+                height: baseHeight * this.scaleFactor,
+                fontSize: Math.max(16, (this.isSmallMobile ? 18 : 24) * this.scaleFactor)
             };
         }
         
@@ -145,20 +161,20 @@ export class ResponsiveManager {
             fontSize: 32
         };
     }
-    
-    getEndGameBannerConfig() {
+      getEndGameBannerConfig() {
         if (this.isMobile) {
+            // Calculate width based on screen size, ensuring it's not too wide
             const baseWidth = Math.min(this.screenWidth * 0.95, 320);
             const baseHeight = this.isSmallMobile ? 120 : 140;
             
             return {
-                x: this.screenWidth / 2 - baseWidth / 2,
-                y: this.screenHeight / 2 - baseHeight / 2,
-                width: baseWidth,
-                height: baseHeight,
+                x: this.screenWidth / 2 - (baseWidth * this.scaleFactor) / 2,
+                y: this.screenHeight / 2 - (baseHeight * this.scaleFactor) / 2,
+                width: baseWidth * this.scaleFactor,
+                height: baseHeight * this.scaleFactor,
                 fontSize: {
-                    title: this.isSmallMobile ? 20 : 26,
-                    score: this.isSmallMobile ? 16 : 20
+                    title: Math.max(18, (this.isSmallMobile ? 20 : 26) * this.scaleFactor),
+                    score: Math.max(14, (this.isSmallMobile ? 16 : 20) * this.scaleFactor)
                 }
             };
         }
@@ -231,6 +247,11 @@ export class ResponsiveManager {
         return 60; // 60fps for desktop
     }
     
+    // Check if orientation change is in progress
+    isOrientationChanging() {
+        return this.orientationChangeInProgress;
+    }
+    
     shouldReduceEffects() {
         // Reduce visual effects on mobile for better performance
         return this.isMobile;
@@ -244,6 +265,31 @@ export class ResponsiveManager {
             return 12; // Moderate particles on mobile
         }
         return 20; // Full particles on desktop
+    }
+    
+    // Check device performance for more granular optimization
+    getDevicePerformanceLevel() {
+        // Try to estimate device performance level (1-3)
+        // Level 1: Low-end devices - very optimized rendering
+        // Level 2: Mid-range devices - moderately optimized rendering
+        // Level 3: High-end devices - full experience
+        
+        if (this.isSmallMobile) {
+            return 1; // Assume smaller screen = lower performance
+        }
+        
+        if (this.isMobile) {
+            // Try to use available performance APIs
+            if (window.navigator && window.navigator.hardwareConcurrency) {
+                const cores = window.navigator.hardwareConcurrency;
+                if (cores <= 2) return 1;
+                if (cores <= 4) return 2;
+                return 3;
+            }
+            return 2; // Default to medium performance for mobile
+        }
+        
+        return 3; // Desktop gets highest performance level
     }
     
     // Helper method to get scaled font
@@ -265,6 +311,24 @@ export class ResponsiveManager {
             x: touch.clientX - rect.left,
             y: touch.clientY - rect.top
         };
+    }
+    
+    // Provide haptic feedback for important actions (if supported)
+    provideTapFeedback(intensity = 'medium') {
+        if (!this.isMobile || !window.navigator.vibrate) return;
+        
+        // Different intensities for different actions
+        const durations = {
+            'light': 10,
+            'medium': 20,
+            'strong': 35
+        };
+        
+        try {
+            window.navigator.vibrate(durations[intensity] || 20);
+        } catch (e) {
+            // Silently fail if vibration API not supported
+        }
     }
     
     isValidTouchTarget(element, minSize = null) {

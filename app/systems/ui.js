@@ -8,7 +8,7 @@ let reactionMessageOpacity = 0;
 let reactionMessageTimer = 0;
 let spotterAnimationFrame = 0;
 
-export function drawGamePanel(ctx, score, triesLeft, helperEnabled) {
+export function drawGamePanel(ctx, score, triesLeft, helperEnabled, wind) {
     const config = responsive.getGamePanelConfig();
     
     ctx.save();
@@ -31,28 +31,52 @@ export function drawGamePanel(ctx, score, triesLeft, helperEnabled) {
     
     // Compact mobile layout
     if (responsive.isMobile) {
-        // Single row layout for mobile
-        const centerY = config.y + config.height / 2 + 4;
+        // Two-row grid layout for mobile
+        const topRowY = config.y + config.height * 0.3;
+        const bottomRowY = config.y + config.height * 0.7;
+        const colWidth = config.width / 2;
         
-        // Score
+        // Top Left: Score
         ctx.fillStyle = '#FF6B00';
         ctx.font = responsive.getScaledFont(config.fontSize.title);
-        ctx.fillText('Score:', config.x + config.padding, centerY - 12);
+        ctx.fillText('Score:', config.x + config.padding, topRowY);
         
         ctx.fillStyle = '#333333';
         ctx.font = responsive.getScaledFont(config.fontSize.value);
-        ctx.fillText(`${score}`, config.x + config.padding + 50 * responsive.scaleFactor, centerY - 12);
+        ctx.fillText(`${score}`, config.x + config.padding + 50 * responsive.scaleFactor, topRowY);
         
-        // Tries Left
+        // Top Right: Tries Left
         ctx.fillStyle = triesLeft <= 1 ? '#FF4757' : '#FF6B00';
         ctx.font = responsive.getScaledFont(config.fontSize.title);
-        ctx.fillText('Tries:', config.x + config.padding, centerY + 12);
+        ctx.fillText('Tries:', config.x + colWidth, topRowY);
         
         ctx.fillStyle = '#333333';
         ctx.font = responsive.getScaledFont(config.fontSize.value);
-        ctx.fillText(`${triesLeft}`, config.x + config.padding + 50 * responsive.scaleFactor, centerY + 12);
+        ctx.fillText(`${triesLeft}`, config.x + colWidth + 50 * responsive.scaleFactor, topRowY);
         
-        // Helper indicator (compact)
+        // Bottom Left: Wind speed
+        if (wind) {
+            ctx.fillStyle = '#FF6B00';
+            ctx.font = responsive.getScaledFont(config.fontSize.title);
+            ctx.fillText('Wind:', config.x + config.padding, bottomRowY);
+            
+            ctx.fillStyle = '#333333';
+            ctx.font = responsive.getScaledFont(config.fontSize.value);
+            ctx.fillText(`${wind.strength.toFixed(1)} m/s`, config.x + config.padding + 50 * responsive.scaleFactor, bottomRowY);
+        }
+        
+        // Bottom Right: Wind Direction
+        if (wind) {
+            ctx.fillStyle = '#FF6B00';
+            ctx.font = responsive.getScaledFont(config.fontSize.title);
+            ctx.fillText('Dir:', config.x + colWidth, bottomRowY);
+            
+            ctx.fillStyle = '#333333';
+            ctx.font = responsive.getScaledFont(config.fontSize.value);
+            ctx.fillText(`${Math.round(wind.direction * 180 / Math.PI)}°`, config.x + colWidth + 40 * responsive.scaleFactor, bottomRowY);
+        }
+        
+        // Helper indicator (positioned at top-right corner)
         if (helperEnabled) {
             ctx.fillStyle = '#FF8C42';
             ctx.beginPath();
@@ -160,7 +184,11 @@ export function drawRoundBanner(ctx, triesLeft) {
         ctx.fillStyle = '#FF6B00';
         ctx.font = responsive.getScaledFont(config.fontSize);
         ctx.textAlign = 'center';
-        ctx.fillText('New Round!', config.x + config.width / 2, config.y + config.height / 2 + config.fontSize / 3);
+        
+        // Calculate vertical centering based on font size
+        const textY = config.y + config.height / 2 + (config.fontSize * 0.33);
+        ctx.fillText('New Round!', config.x + config.width / 2, textY);
+        
         ctx.textAlign = 'start';
         
         ctx.restore();
@@ -189,13 +217,19 @@ export function drawEndOfRoundBanner(ctx, score) {
     ctx.fillStyle = '#FF6B00';
     ctx.font = responsive.getScaledFont(config.fontSize.title);
     ctx.textAlign = 'center';
-    ctx.fillText('Round Over!', config.x + config.width / 2, config.y + config.height / 2 - 10);
     
+    // Calculate title position - adjust vertical spacing based on banner size
+    const titleY = config.y + config.height * 0.4;
+    ctx.fillText('Round Over!', config.x + config.width / 2, titleY);
+    
+    // Calculate score position with proper spacing from title
+    const scoreY = config.y + config.height * 0.7;
     ctx.fillStyle = '#333333';
     ctx.font = responsive.getScaledFont(config.fontSize.score);
-    ctx.fillText(`Your Score: ${score}`, config.x + config.width / 2, config.y + config.height / 2 + 25);
+    ctx.fillText(`Your Score: ${score}`, config.x + config.width / 2, scoreY);
+    
     ctx.textAlign = 'start';
-      ctx.restore();
+    ctx.restore();
 }
 
 export function createPlayAgainButton(onPlayAgain) {
