@@ -1,0 +1,36 @@
+// Input system for the archery game
+export function setupInputHandlers(bow, arrow, updateWind, onArrowRelease) {
+    function updateBowAngle(e) {
+        if (!arrow.fired) {
+            let pos;
+            if (e.touches) {
+                pos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            } else {
+                pos = { x: e.clientX, y: e.clientY };
+            }
+            let dx = pos.x - bow.x;
+            let dy = pos.y - bow.y;
+            bow.angle = Math.atan2(dy, dx);
+            arrow.angle = bow.angle;
+        }
+    }
+    function startPulling() { bow.pulling = true; }
+    function releaseArrow() {
+        if (bow.pulling) {
+            updateWind();
+            arrow.fired = true;
+            arrow.speed = 30;
+            arrow.vx = arrow.speed * Math.cos(bow.angle);
+            arrow.vy = arrow.speed * Math.sin(bow.angle);
+            bow.pulling = false;
+            arrow.releaseAngle = bow.angle;
+            onArrowRelease && onArrowRelease();
+        }
+    }
+    window.addEventListener('mousemove', updateBowAngle);
+    window.addEventListener('touchmove', updateBowAngle);
+    window.addEventListener('mousedown', startPulling);
+    window.addEventListener('touchstart', startPulling);
+    window.addEventListener('mouseup', releaseArrow);
+    window.addEventListener('touchend', releaseArrow);
+}
