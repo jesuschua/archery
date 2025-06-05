@@ -1,9 +1,12 @@
 // Responsive utilities for mobile-friendly UI scaling
 
-export class ResponsiveManager {
-    constructor() {
+export class ResponsiveManager {    constructor() {
         this.updateScreenInfo();
         this.orientationChangeInProgress = false;
+        
+        // Track user interaction for vibration API
+        this.hasUserInteracted = false;
+        this.setupUserInteractionTracking();
         
         // Update on resize
         window.addEventListener('resize', () => this.updateScreenInfo());
@@ -22,6 +25,21 @@ export class ResponsiveManager {
                 this.orientationChangeInProgress = false;
             }, 500);
         });
+    }
+    
+    setupUserInteractionTracking() {
+        // Track first user interaction to enable vibration API
+        const markUserInteraction = () => {
+            this.hasUserInteracted = true;
+            // Remove listeners after first interaction
+            document.removeEventListener('touchstart', markUserInteraction, { passive: true });
+            document.removeEventListener('mousedown', markUserInteraction, { passive: true });
+            document.removeEventListener('keydown', markUserInteraction, { passive: true });
+        };
+        
+        document.addEventListener('touchstart', markUserInteraction, { passive: true });
+        document.addEventListener('mousedown', markUserInteraction, { passive: true });
+        document.addEventListener('keydown', markUserInteraction, { passive: true });
     }
     
     updateScreenInfo() {
@@ -312,10 +330,10 @@ export class ResponsiveManager {
             y: touch.clientY - rect.top
         };
     }
-    
-    // Provide haptic feedback for important actions (if supported)
+      // Provide haptic feedback for important actions (if supported)
     provideTapFeedback(intensity = 'medium') {
-        if (!this.isMobile || !window.navigator.vibrate) return;
+        // Only provide vibration if user has interacted with the page
+        if (!this.isMobile || !window.navigator.vibrate || !this.hasUserInteracted) return;
         
         // Different intensities for different actions
         const durations = {
