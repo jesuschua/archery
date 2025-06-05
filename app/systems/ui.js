@@ -1,4 +1,10 @@
 // UI rendering system for the archery game
+
+// Reaction message state
+let reactionMessage = '';
+let reactionMessageOpacity = 0;
+let reactionMessageTimer = 0;
+
 export function drawScore(ctx, score) {
     ctx.save();
     ctx.globalAlpha = 0.92;
@@ -133,5 +139,54 @@ export function removePlayAgainButton() {
     const button = document.getElementById('play-again-btn');
     if (button) {
         button.remove();
+    }
+}
+
+export function showReactionMessage(message) {
+    reactionMessage = message;
+    reactionMessageOpacity = 1;
+    reactionMessageTimer = 60; // Show for ~1 second at 60fps (shorter duration)
+}
+
+export function updateReactionMessage() {
+    if (reactionMessageTimer > 0) {
+        reactionMessageTimer--;
+        // Quick fade out in the last 15 frames (more abrupt)
+        if (reactionMessageTimer < 15) {
+            reactionMessageOpacity = reactionMessageTimer / 15;
+        }
+    } else {
+        reactionMessage = '';
+        reactionMessageOpacity = 0;
+    }
+}
+
+export function drawReactionMessage(ctx) {
+    if (reactionMessage && reactionMessageOpacity > 0) {
+        ctx.save();
+        ctx.globalAlpha = reactionMessageOpacity;
+        
+        // Position just below the "New Round!" banner (centered)
+        const messageWidth = 200;
+        const messageHeight = 40;
+        const messageX = ctx.canvas.width/2 - messageWidth/2;
+        const messageY = 95; // Just below the New Round banner (which ends at ~84)
+        
+        // Smaller, less intrusive background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        ctx.strokeStyle = '#FF6B35';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(messageX, messageY, messageWidth, messageHeight, 10);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Smaller text for less distraction
+        ctx.fillStyle = '#FF6B35';
+        ctx.font = 'bold 20px Segoe UI, Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(reactionMessage, ctx.canvas.width/2, messageY + 26);
+        ctx.textAlign = 'start';
+        ctx.restore();
     }
 }

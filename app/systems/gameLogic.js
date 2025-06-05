@@ -18,13 +18,13 @@ export function updateArrow(arrow, wind, gravity, arrowPath, target, onHit, onMi
         const arrowTipX = arrow.x + Math.cos(arrow.angle) * (arrowLength / 2);
         const arrowTipY = arrow.y + Math.sin(arrow.angle) * (arrowLength / 2);
         const arrowTailX = arrow.x - Math.cos(arrow.angle) * (arrowLength / 2);
-        const arrowTailY = arrow.y - Math.sin(arrow.angle) * (arrowLength / 2);
-        if (lineCircleIntersection(
+        const arrowTailY = arrow.y - Math.sin(arrow.angle) * (arrowLength / 2);        if (lineCircleIntersection(
             arrowTailX, arrowTailY,
             arrowTipX, arrowTipY,
             target.x, target.y, target.radius
         )) {
-            onHit && onHit();
+            const distance = calculateDistanceFromTarget(arrow, target);
+            onHit && onHit(distance);
         }
         if (
             arrow.x > window.innerWidth ||
@@ -32,7 +32,33 @@ export function updateArrow(arrow, wind, gravity, arrowPath, target, onHit, onMi
             arrow.x < 0 ||
             arrow.y < 0
         ) {
-            onMiss && onMiss();
+            const distance = calculateDistanceFromTarget(arrow, target);
+            onMiss && onMiss(distance);
         }
+    }
+}
+
+export function calculateDistanceFromTarget(arrow, target) {
+    return Math.sqrt(Math.pow(arrow.x - target.x, 2) + Math.pow(arrow.y - target.y, 2));
+}
+
+export function getReactionMessage(distance, targetRadius) {
+    const distanceRatio = distance / targetRadius;
+    
+    if (distanceRatio <= 1) {
+        // Hit the target
+        return "Perfect!";
+    } else if (distanceRatio <= 1.5) {
+        // Very close miss
+        return "Almost!";
+    } else if (distanceRatio <= 10) {
+        // Close miss
+        return "Just missed!";
+    } else if (distanceRatio <= 20) {
+        // Mid miss
+        return "That's a Miss!";
+    } else {
+        // Far miss
+        return "Far out!";
     }
 }

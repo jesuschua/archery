@@ -4,11 +4,11 @@ import Arrow from './entities/Arrow.js';
 import Target from './entities/target.js';
 import { drawBow, drawArrow, drawTarget } from './systems/rendering.js';
 import { setupInputHandlers, setInputEnabled } from './systems/input.js';
-import { updateArrow } from './systems/gameLogic.js';
+import { updateArrow, getReactionMessage } from './systems/gameLogic.js';
 import { randomWind } from './utils/gameUtils.js';
 import { drawBackground } from './systems/background.js';
 import { drawWind, drawWindIndicator } from './systems/wind.js';
-import { drawScore, drawTriesLeft, drawRoundBanner, drawEndOfRoundBanner, createPlayAgainButton, removePlayAgainButton } from './systems/ui.js';
+import { drawScore, drawTriesLeft, drawRoundBanner, drawEndOfRoundBanner, createPlayAgainButton, removePlayAgainButton, showReactionMessage, updateReactionMessage, drawReactionMessage } from './systems/ui.js';
 import { drawTracer } from './systems/tracer.js';
 
 const canvas = document.getElementById('gameCanvas');
@@ -70,14 +70,23 @@ function updateWind() {
     wind = randomWind(); // Wind changes for each shot
 }
 
-function onArrowHit() {
+function onArrowHit(distance) {
     score += 1;
     targetColor = 'green';
     setTimeout(() => { targetColor = 'red'; }, 500);
+    
+    // Show reaction message based on accuracy (hit = perfect)
+    const message = getReactionMessage(0, target.radius); // 0 distance for hit
+    showReactionMessage(message);
+    
     resetArrow();
 }
 
-function onArrowMiss() {
+function onArrowMiss(distance) {
+    // Show reaction message based on how close the miss was
+    const message = getReactionMessage(distance, target.radius);
+    showReactionMessage(message);
+    
     resetArrow();
 }
 
@@ -207,7 +216,13 @@ function gameLoop() {
     drawTracer(ctx, arrowPath);
     drawWind(ctx, canvas, wind);
     drawWindGauge(ctx, canvas, wind, time);
-    updateLeaves();    if (showEndOfRound) {
+    updateLeaves();
+    
+    // Update and draw reaction messages
+    updateReactionMessage();
+    drawReactionMessage(ctx);
+    
+    if (showEndOfRound) {
         drawEndOfRoundBanner(ctx, score);
         // Create the Play Again button if it doesn't exist
         if (!document.getElementById('play-again-btn')) {
