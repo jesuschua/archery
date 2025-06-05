@@ -1,6 +1,6 @@
 // Import modules
 import Bow from './entities/bow.js';
-import Arrow from './entities/Arrow.js';
+import Arrow from './entities/arrow.js';
 import Target from './entities/target.js';
 import { drawBow, drawArrow, drawTarget } from './systems/rendering.js';
 import { setupInputHandlers, setInputEnabled, isHelperModeEnabled } from './systems/input.js';
