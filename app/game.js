@@ -9,7 +9,7 @@ import { randomWind } from './utils/gameUtils.js';
 import { drawBackground } from './systems/background.js';
 import { drawWind, drawWindIndicator } from './systems/wind.js';
 import { drawScore, drawTriesLeft, drawRoundBanner, drawEndOfRoundBanner, createPlayAgainButton, removePlayAgainButton, showReactionMessage, updateReactionMessage, drawReactionMessage } from './systems/ui.js';
-import { drawTracer } from './systems/tracer.js';
+import { drawTracer, clearSparkles } from './systems/tracer.js';
 import { calculateOptimalAngle, drawHelperMarker, drawHelperUI } from './systems/helper.js';
 
 const canvas = document.getElementById('gameCanvas');
@@ -100,6 +100,7 @@ function resetArrow() {
     arrow.speed = 0;
     arrow.angle = bow.angle;
     arrowPath = [];
+    clearSparkles(); // Clear sparkle effects when arrow resets
     triesLeft -= 1;
     if (triesLeft <= 0) {
         showEndOfRound = true;
@@ -128,6 +129,7 @@ function resetGame() {
     arrow.speed = 0;
     arrow.angle = bow.angle;
     arrowPath = [];
+    clearSparkles(); // Clear sparkle effects when game resets
     updateWind(); // Set wind for the first shot of the round
 }
 

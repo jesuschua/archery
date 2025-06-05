@@ -1,26 +1,44 @@
-// Background rendering system for the archery game
+// Background rendering system for the archery game - Orange & White Minimalist Theme
 export function drawBackground(ctx, canvas) {
+    // Clean minimalist gradient: light orange to white
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, '#87CEEB');
-    gradient.addColorStop(0.7, '#98FB98');
-    gradient.addColorStop(1, '#228B22');
+    gradient.addColorStop(0, '#FFF8F0');  // Very light cream white
+    gradient.addColorStop(0.3, '#FFEDE0'); // Light orange tint
+    gradient.addColorStop(0.7, '#FFE4CC'); // Soft orange
+    gradient.addColorStop(1, '#FFDAB3');   // Warmer orange base
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    drawClouds(ctx, canvas);
+    
+    // Add subtle texture with minimalist geometric elements
+    drawGeometricElements(ctx, canvas);
 }
 
-function drawClouds(ctx, canvas) {
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    drawCloud(ctx, canvas.width * 0.2, canvas.height * 0.2, 40);
-    drawCloud(ctx, canvas.width * 0.6, canvas.height * 0.15, 35);
-    drawCloud(ctx, canvas.width * 0.8, canvas.height * 0.25, 30);
-}
-
-function drawCloud(ctx, x, y, size) {
+function drawGeometricElements(ctx, canvas) {
+    // Very subtle white geometric shapes for depth
+    ctx.save();
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = '#FFFFFF';
+    
+    // Large subtle circles
     ctx.beginPath();
-    ctx.arc(x, y, size, 0, Math.PI * 2);
-    ctx.arc(x + size * 0.6, y, size * 0.8, 0, Math.PI * 2);
-    ctx.arc(x + size * 1.2, y, size, 0, Math.PI * 2);
-    ctx.arc(x + size * 0.6, y - size * 0.5, size * 0.7, 0, Math.PI * 2);
+    ctx.arc(canvas.width * 0.1, canvas.height * 0.3, 120, 0, Math.PI * 2);
     ctx.fill();
+    
+    ctx.beginPath();
+    ctx.arc(canvas.width * 0.9, canvas.height * 0.7, 80, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Subtle lines for texture
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.08;
+    
+    for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height * (0.2 + i * 0.15));
+        ctx.lineTo(canvas.width, canvas.height * (0.25 + i * 0.15));
+        ctx.stroke();
+    }
+    
+    ctx.restore();
 }

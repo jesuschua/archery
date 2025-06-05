@@ -3,16 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shooting Game</title>
+    <title>Minimalist Archery - Orange & White</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        * {
+            box-sizing: border-box;
+        }
+        
         body, html {
             margin: 0;
             padding: 0;
             overflow: hidden;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFEDE0 50%, #FFE4CC 100%);
         }
+        
         canvas {
             display: block;
-            background: white
+            background: transparent;
+            cursor: crosshair;
+        }
+        
+        /* Smooth loading animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        body {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Custom scrollbar for any overflow elements */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #FF8C42;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FF6B00;
         }
     </style>
 </head>

@@ -76,11 +76,11 @@ export function drawHelperMarker(ctx, bow, optimalAngle, helperEnabled) {
     const helperEndX = bow.x + Math.cos(optimalAngle) * helperLength;
     const helperEndY = bow.y + Math.sin(optimalAngle) * helperLength;
     
-    // Draw animated dashed line
+    // Orange-themed animated dashed line
     const time = Date.now() * 0.005;
     ctx.setLineDash([15, 10]);
     ctx.lineDashOffset = time * 20;
-    ctx.strokeStyle = '#00FF88';
+    ctx.strokeStyle = '#FF8C42';
     ctx.lineWidth = 4;
     ctx.globalAlpha = 0.8;
     ctx.beginPath();
@@ -88,23 +88,27 @@ export function drawHelperMarker(ctx, bow, optimalAngle, helperEnabled) {
     ctx.lineTo(helperEndX, helperEndY);
     ctx.stroke();
     
-    // Draw helper marker with pulsing effect
+    // Orange-themed helper marker with pulsing effect
     ctx.setLineDash([]);
     const pulseSize = 8 + Math.sin(time * 3) * 3;
-    ctx.fillStyle = '#00FF88';
+    
+    // Outer glow
+    ctx.shadowColor = '#FF8C42';
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = '#FF8C42';
     ctx.globalAlpha = 0.9;
     ctx.beginPath();
     ctx.arc(helperEndX, helperEndY, pulseSize, 0, Math.PI * 2);
     ctx.fill();
     
-    // Draw inner circle
-    ctx.fillStyle = '#FFFFFF';
+    // Inner white circle
+    ctx.shadowColor = 'transparent';    ctx.fillStyle = '#FFFFFF';
     ctx.beginPath();
     ctx.arc(helperEndX, helperEndY, pulseSize * 0.4, 0, Math.PI * 2);
     ctx.fill();
     
-    // Draw crosshair
-    ctx.strokeStyle = '#004400';
+    // Orange-themed crosshair
+    ctx.strokeStyle = '#D14500';
     ctx.lineWidth = 2;
     ctx.globalAlpha = 1;
     ctx.beginPath();
@@ -120,29 +124,33 @@ export function drawHelperMarker(ctx, bow, optimalAngle, helperEnabled) {
 export function drawHelperUI(ctx, helperEnabled) {
     ctx.save();
     
-    // Draw helper mode status
+    // Orange-themed helper mode status
     const statusX = 25;
     const statusY = 175;
     const statusWidth = 180;
     const statusHeight = 50;
     
-    ctx.globalAlpha = 0.9;
-    ctx.fillStyle = helperEnabled ? 'rgba(0, 150, 0, 0.8)' : 'rgba(100, 100, 100, 0.8)';
-    ctx.strokeStyle = helperEnabled ? '#00FF00' : '#666';
-    ctx.lineWidth = 2;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    
+    ctx.fillStyle = helperEnabled ? 'rgba(255, 140, 66, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+    ctx.strokeStyle = helperEnabled ? '#FF6B00' : '#CCCCCC';
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.roundRect(statusX, statusY, statusWidth, statusHeight, 8);
+    ctx.roundRect(statusX, statusY, statusWidth, statusHeight, 12);
     ctx.fill();
     ctx.stroke();
     
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 16px Segoe UI, Arial';
+    ctx.shadowColor = 'transparent';
+    ctx.fillStyle = helperEnabled ? '#FFFFFF' : '#FF6B00';
+    ctx.font = 'bold 16px "Segoe UI", system-ui, sans-serif';
     ctx.fillText(`Helper: ${helperEnabled ? 'ON' : 'OFF'}`, statusX + 12, statusY + 22);
     
-    // Draw instruction more prominently
-    ctx.fillStyle = helperEnabled ? '#FFFF88' : '#ccc';
-    ctx.font = 'bold 14px Segoe UI, Arial';
+    // Instruction text
+    ctx.fillStyle = helperEnabled ? 'rgba(255, 255, 255, 0.9)' : '#999999';
+    ctx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
     ctx.fillText('Press H to toggle', statusX + 12, statusY + 40);
     
     ctx.restore();
