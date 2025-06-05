@@ -4,6 +4,7 @@
 let reactionMessage = '';
 let reactionMessageOpacity = 0;
 let reactionMessageTimer = 0;
+let spotterAnimationFrame = 0;
 
 export function drawGamePanel(ctx, score, triesLeft, helperEnabled) {
     const panelX = 20;
@@ -275,12 +276,14 @@ export function removePlayAgainButton() {
 export function showReactionMessage(message) {
     reactionMessage = message;
     reactionMessageOpacity = 1;
-    reactionMessageTimer = 60; // Show for ~1 second at 60fps
+    reactionMessageTimer = 90; // Show for ~1.5 seconds at 60fps (longer for reading)
+    spotterAnimationFrame = 0;
 }
 
 export function updateReactionMessage() {
     if (reactionMessageTimer > 0) {
         reactionMessageTimer--;
+        spotterAnimationFrame++;
         // Smooth fade out in the last 15 frames
         if (reactionMessageTimer < 15) {
             reactionMessageOpacity = reactionMessageTimer / 15;
@@ -288,42 +291,154 @@ export function updateReactionMessage() {
     } else {
         reactionMessage = '';
         reactionMessageOpacity = 0;
+        spotterAnimationFrame = 0;
     }
 }
 
+function drawSpotter(ctx, canvas, showingReaction = false) {
+    // Position spotter near the base of the windsock mast (properly scaled)
+    const poleX = canvas.width * 0.85; // Same X as windsock pole
+    const spotterX = poleX - 20; // Slightly to the left of mast
+    const spotterY = canvas.height * 0.75 - 15; // On island surface (horizon at 0.75) with character height offset
+    
+    ctx.save();
+    
+    // Silhouette style - much smaller scale to match mast proportions
+    const headRadius = 4;
+    const bodyHeight = 12;
+    const bodyWidth = 6;
+    const armLength = 8;
+    const legLength = 10;
+    
+    // Subtle animation for reactions
+    const bounce = showingReaction ? Math.sin(spotterAnimationFrame * 0.4) * 0.5 : 0;
+    const armWave = showingReaction ? Math.sin(spotterAnimationFrame * 0.3) * 3 : 0;
+    
+    // Fill silhouette with dark color for contrast
+    ctx.fillStyle = '#333333';
+    ctx.strokeStyle = '#FF8C42';
+    ctx.lineWidth = 1;
+    
+    // Head - simple circle
+    ctx.beginPath();
+    ctx.arc(spotterX, spotterY + bounce, headRadius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Body - simple rectangle
+    ctx.fillRect(spotterX - bodyWidth/2, spotterY + headRadius + bounce, bodyWidth, bodyHeight);
+    
+    // Arms - simple lines with animation
+    ctx.strokeStyle = '#333333';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    
+    // Left arm
+    ctx.beginPath();
+    ctx.moveTo(spotterX - bodyWidth/2, spotterY + headRadius + 3 + bounce);
+    ctx.lineTo(spotterX - armLength + armWave, spotterY + headRadius + 8 + bounce);
+    ctx.stroke();
+    
+    // Right arm - pointing gesture when reacting
+    const rightArmAngle = showingReaction ? -0.3 + armWave * 0.02 : 0.2;
+    ctx.beginPath();
+    ctx.moveTo(spotterX + bodyWidth/2, spotterY + headRadius + 3 + bounce);
+    ctx.lineTo(spotterX + bodyWidth/2 + Math.cos(rightArmAngle) * armLength, 
+               spotterY + headRadius + 8 + bounce + Math.sin(rightArmAngle) * armLength);
+    ctx.stroke();
+    
+    // Legs - simple lines
+    ctx.beginPath();
+    ctx.moveTo(spotterX - 2, spotterY + headRadius + bodyHeight + bounce);
+    ctx.lineTo(spotterX - 3, spotterY + headRadius + bodyHeight + legLength + bounce);
+    ctx.moveTo(spotterX + 2, spotterY + headRadius + bodyHeight + bounce);
+    ctx.lineTo(spotterX + 3, spotterY + headRadius + bodyHeight + legLength + bounce);
+    ctx.stroke();
+    
+    // Optional hat silhouette for coach identity
+    ctx.fillStyle = '#333333';
+    ctx.beginPath();
+    ctx.ellipse(spotterX, spotterY - 2 + bounce, headRadius + 1, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
+}
+
+function drawSpeechBubble(ctx, canvas, message, opacity) {
+    // Calculate spotter position (same as in drawSpotter)
+    const poleX = canvas.width * 0.85;
+    const spotterX = poleX - 20;
+    const spotterY = canvas.height * 0.75 - 15; // On island surface (horizon at 0.75) with character height offset
+    
+    // Position bubble above and to the left of spotter
+    const bubbleWidth = 140;
+    const bubbleHeight = 50;
+    const bubbleX = spotterX - bubbleWidth + 20; // Position to left of spotter
+    const bubbleY = spotterY - bubbleHeight - 20; // Position above spotter
+    const tailSize = 12;
+    
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    
+    // Main bubble with shadow
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 3;
+    ctx.shadowOffsetY = 3;
+    
+    ctx.fillStyle = '#FFFFFF';
+    ctx.strokeStyle = '#FF8C42';
+    ctx.lineWidth = 3;
+    
+    // Bubble body
+    ctx.beginPath();
+    ctx.roundRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, 16);
+    ctx.fill();
+    ctx.stroke();
+    
+    // Speech bubble tail pointing correctly to spotter
+    ctx.shadowColor = 'transparent';
+    ctx.beginPath();
+    // Calculate tail position to point toward spotter's head
+    const tailCenterX = bubbleX + bubbleWidth - 40; // Tail on right side of bubble
+    const tailBaseY = bubbleY + bubbleHeight;
+    ctx.moveTo(tailCenterX - 8, tailBaseY);
+    ctx.lineTo(spotterX, spotterY - 4); // Point directly to spotter's head
+    ctx.lineTo(tailCenterX + 8, tailBaseY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    
+    // Text with coaching enthusiasm
+    ctx.fillStyle = '#FF6B00';
+    ctx.font = 'bold 16px "Inter", "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    
+    // Add some animation to the text
+    const textY = bubbleY + bubbleHeight/2 + 6;
+    const bounce = Math.sin(spotterAnimationFrame * 0.3) * 1;
+    ctx.fillText(message, bubbleX + bubbleWidth/2, textY + bounce);
+    
+    // Add some coaching-style emphasis marks
+    if (message === "Perfect!" || message === "Excellent!") {
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 12px "Inter", "Segoe UI", system-ui, sans-serif';
+        ctx.fillText('★', bubbleX + bubbleWidth - 15, bubbleY + 15);
+        ctx.fillText('★', bubbleX + 10, bubbleY + 15);
+    }
+    
+    ctx.textAlign = 'start';
+    ctx.restore();
+}
+
 export function drawReactionMessage(ctx) {
-    if (reactionMessage && reactionMessageOpacity > 0) {
-        ctx.save();
-        ctx.globalAlpha = reactionMessageOpacity;
-        
-        // Position just below the "New Round!" banner
-        const messageWidth = 200;
-        const messageHeight = 40;
-        const messageX = ctx.canvas.width/2 - messageWidth/2;
-        const messageY = 95;
-        
-        // Clean minimalist message design
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
-        ctx.shadowBlur = 6;
-        ctx.shadowOffsetX = 2;
-        ctx.shadowOffsetY = 2;
-        
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        ctx.strokeStyle = '#FF8C42';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.roundRect(messageX, messageY, messageWidth, messageHeight, 12);
-        ctx.fill();
-        ctx.stroke();
-        
-        // Clean text
-        ctx.shadowColor = 'transparent';
-        ctx.fillStyle = '#FF6B00';
-        ctx.font = 'bold 18px "Segoe UI", system-ui, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(reactionMessage, ctx.canvas.width/2, messageY + 26);
-        ctx.textAlign = 'start';
-        
-        ctx.restore();
+    const canvas = ctx.canvas;
+    
+    // Always draw the spotter character
+    const isShowingReaction = reactionMessage && reactionMessageOpacity > 0;
+    drawSpotter(ctx, canvas, isShowingReaction);
+    
+    // Draw speech bubble if there's a reaction
+    if (isShowingReaction) {
+        drawSpeechBubble(ctx, canvas, reactionMessage, reactionMessageOpacity);
     }
 }

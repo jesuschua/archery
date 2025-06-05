@@ -46,19 +46,24 @@ export function getReactionMessage(distance, targetRadius) {
     const distanceRatio = distance / targetRadius;
     
     if (distanceRatio <= 1) {
-        // Hit the target
-        return "Perfect!";
+        // Hit the target - enthusiastic coaching reactions
+        const hitMessages = ["Perfect!", "Bullseye!", "Excellent!", "Outstanding!", "Great shot!"];
+        return hitMessages[Math.floor(Math.random() * hitMessages.length)];
     } else if (distanceRatio <= 1.5) {
-        // Very close miss
-        return "Almost!";
+        // Very close miss - encouraging coach reactions
+        const closeMessages = ["So close!", "Almost there!", "Nearly perfect!", "Keep it up!", "Good form!"];
+        return closeMessages[Math.floor(Math.random() * closeMessages.length)];
     } else if (distanceRatio <= 10) {
-        // Close miss
-        return "Just missed!";
+        // Close miss - constructive coaching
+        const missMessages = ["Adjust your aim!", "Try again!", "Focus!", "Breathe and aim!", "You've got this!"];
+        return missMessages[Math.floor(Math.random() * missMessages.length)];
     } else if (distanceRatio <= 20) {
-        // Mid miss
-        return "That's a Miss!";
+        // Mid miss - motivational coaching
+        const midMessages = ["Keep trying!", "Check the wind!", "Steady now!", "Focus on form!", "Don't give up!"];
+        return midMessages[Math.floor(Math.random() * midMessages.length)];
     } else {
-        // Far miss
-        return "Far out!";
+        // Far miss - encouraging coaching
+        const farMessages = ["Try again!", "Check your stance!", "Watch the wind!", "Stay focused!", "Practice makes perfect!"];
+        return farMessages[Math.floor(Math.random() * farMessages.length)];
     }
 }

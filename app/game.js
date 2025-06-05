@@ -26,17 +26,15 @@ let targetColor = 'red';
 let target_ratio = 0.012;
 let wind = randomWind();
 
-let bow = new Bow(canvas.width * 0.3, canvas.height * 0.5, canvas.width * 0.05, canvas.height * 0.2);
-let arrow = new Arrow(bow.x, bow.y, canvas.width * 0.02, canvas.height * 0.01);
-let target = new Target(canvas.width * 0.9, canvas.height * 0.5, canvas.width * target_ratio, 100, 0.01);
+let bow = new Bow(canvas.width * 0.2, canvas.height * 0.5, canvas.width * 0.025, canvas.height * 0.1);
+let arrow = new Arrow(bow.x, bow.y, canvas.width * 0.01, canvas.height * 0.005);
+let target = new Target(canvas.width * 0.75, canvas.height * 0.5, canvas.width * target_ratio, 100, 0.01);
 
 let score = 0;
 let triesLeft = 5;
 let arrowPath = [];
 
 let leaves = Array.from({ length: 15 }, () => createLeaf());
-let windGaugeFlapAngle = 0;
-let windGaugeFlapSpeed = 0;
 let showEndOfRound = false;
 
 function createLeaf() {
@@ -60,15 +58,14 @@ function createLeaf() {
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    bow.x = canvas.width * 0.3;
+    bow.x = canvas.width * 0.2;
     bow.y = canvas.height * 0.5;
-    bow.width = canvas.width * 0.05;
-    bow.height = canvas.height * 0.2;
-    arrow.x = bow.x;
+    bow.width = canvas.width * 0.025;
+    bow.height = canvas.height * 0.1;    arrow.x = bow.x;
     arrow.y = bow.y;
-    arrow.width = canvas.width * 0.02;
-    arrow.height = canvas.height * 0.01;
-    target.x = canvas.width * 0.9;
+    arrow.width = canvas.width * 0.01;
+    arrow.height = canvas.height * 0.005;
+    target.x = canvas.width * 0.75;
     target.y = canvas.height * 0.5;
     target.radius = canvas.width * target_ratio;
 }
@@ -167,47 +164,133 @@ function drawLeaves(ctx) {
     }
 }
 
-function drawWindGauge(ctx, canvas, wind, time) {
-    // Gauge base
-    const centerX = canvas.width * 0.85;
-    const centerY = canvas.height * 0.15;
+function drawWindsock(ctx, canvas, wind, time) {
+    const poleX = canvas.width * 0.85;
+    const poleBottomY = canvas.height * 0.75; // Position on island surface (horizon level)
+    const poleTopY = canvas.height * 0.58; // Adjust top accordingly to maintain pole height
+    const sockAttachY = poleTopY + 15;
+    
     ctx.save();
+    
+    // Draw pole with gradient for 3D effect
+    const poleGradient = ctx.createLinearGradient(poleX - 3, 0, poleX + 3, 0);
+    poleGradient.addColorStop(0, '#555555');
+    poleGradient.addColorStop(0.5, '#777777');
+    poleGradient.addColorStop(1, '#444444');
+    
+    ctx.fillStyle = poleGradient;
+    ctx.fillRect(poleX - 3, poleTopY, 6, poleBottomY - poleTopY);
+    
+    // Pole cap
+    ctx.fillStyle = '#333333';
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 36, Math.PI * 0.7, Math.PI * 2.3, false);
-    ctx.lineWidth = 8;
-    ctx.strokeStyle = '#888';
-    ctx.stroke();
-    // Needle
-    const needleLength = 32;
-    const needleAngle = wind.direction;
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.rotate(needleAngle);
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(needleLength, 0);
-    ctx.lineWidth = 5;
-    ctx.strokeStyle = '#e33';
-    ctx.stroke();
-    ctx.restore();
-    // Flapping flag
-    ctx.save();
-    ctx.translate(centerX + Math.cos(needleAngle) * needleLength, centerY + Math.sin(needleAngle) * needleLength);
-    // Flap angle and speed depend on wind strength
-    windGaugeFlapSpeed = 0.2 + Math.abs(wind.strength) * 0.8;
-    windGaugeFlapAngle = Math.sin(time * windGaugeFlapSpeed) * (10 + 20 * Math.abs(wind.strength)) * Math.PI / 180;
-    ctx.rotate(needleAngle + windGaugeFlapAngle);
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(0, -8);
-    ctx.lineTo(28 + 30 * Math.abs(wind.strength), 0);
-    ctx.lineTo(0, 8);
-    ctx.closePath();
-    ctx.fillStyle = '#f7e96b';
-    ctx.globalAlpha = 0.85;
+    ctx.arc(poleX, poleTopY, 4, 0, Math.PI * 2);
     ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.restore();
+    
+    // Calculate windsock properties based on wind
+    const windStrength = Math.abs(wind.strength);
+    const windDirection = wind.direction;
+    const sockLength = 60 + windStrength * 50; // Length increases with wind strength
+    const sockInflation = 0.4 + windStrength * 0.6; // How inflated the sock appears
+    const waviness = Math.sin(time * (0.3 + windStrength * 0.8)) * (3 + windStrength * 8);
+    
+    // Position windsock attachment point
+    const attachX = poleX + 8;
+    const attachY = sockAttachY;
+    
+    // Draw attachment ring with more detail
+    ctx.fillStyle = '#FF8C42';
+    ctx.beginPath();
+    ctx.arc(attachX, attachY, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#FF6B00';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Inner ring
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(attachX, attachY, 4, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Draw windsock fabric with segments
+    const segments = 6;
+    const segmentLength = sockLength / segments;
+    
+    for (let i = 0; i < segments; i++) {
+        const segmentProgress = i / segments;
+        const nextSegmentProgress = (i + 1) / segments;
+        
+        // Calculate positions for this segment with smoother wave motion
+        const waveOffset1 = Math.sin(time * (0.4 + windStrength * 0.8) + i * 0.7) * (2 + windStrength * 4);
+        const waveOffset2 = Math.sin(time * (0.4 + windStrength * 0.8) + (i + 1) * 0.7) * (2 + windStrength * 4);
+        
+        const segStartX = attachX + Math.cos(windDirection) * segmentProgress * sockLength;
+        const segStartY = attachY + Math.sin(windDirection) * segmentProgress * sockLength + waveOffset1;
+        
+        const segEndX = attachX + Math.cos(windDirection) * nextSegmentProgress * sockLength;
+        const segEndY = attachY + Math.sin(windDirection) * nextSegmentProgress * sockLength + waveOffset2;
+        
+        // Segment width decreases along the sock and varies with inflation
+        const startWidth = (14 - i * 2) * sockInflation;
+        const endWidth = (14 - (i + 1) * 2) * sockInflation;
+        
+        // Perpendicular vector for width
+        const perpX = -Math.sin(windDirection);
+        const perpY = Math.cos(windDirection);
+        
+        // Alternating orange and white stripes
+        const isOrangeStripe = i % 2 === 0;
+        ctx.fillStyle = isOrangeStripe ? '#FF8C42' : '#FFFFFF';
+        ctx.strokeStyle = '#FF6B00';
+        ctx.lineWidth = 1;
+        
+        // Add subtle shadow for depth
+        if (isOrangeStripe) {
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+            ctx.shadowBlur = 3;
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 1;
+        } else {
+            ctx.shadowColor = 'transparent';
+        }
+        
+        ctx.beginPath();
+        ctx.moveTo(segStartX + perpX * startWidth, segStartY + perpY * startWidth);
+        ctx.lineTo(segStartX - perpX * startWidth, segStartY - perpY * startWidth);
+        ctx.lineTo(segEndX - perpX * endWidth, segEndY - perpY * endWidth);
+        ctx.lineTo(segEndX + perpX * endWidth, segEndY + perpY * endWidth);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+    }
+    
+    // Reset shadow
+    ctx.shadowColor = 'transparent';
+    
+    // Draw connecting lines between segments for definition
+    ctx.strokeStyle = '#FF6B00';
+    ctx.lineWidth = 1;
+    for (let i = 1; i < segments; i++) {
+        const segmentProgress = i / segments;
+        const waveOffset = Math.sin(time * (0.4 + windStrength * 0.8) + i * 0.7) * (2 + windStrength * 4);
+        const segX = attachX + Math.cos(windDirection) * segmentProgress * sockLength;
+        const segY = attachY + Math.sin(windDirection) * segmentProgress * sockLength + waveOffset;
+        const segWidth = (14 - i * 2) * sockInflation;
+        
+        const perpX = -Math.sin(windDirection);
+        const perpY = Math.cos(windDirection);
+        
+        ctx.beginPath();
+        ctx.moveTo(segX + perpX * segWidth, segY + perpY * segWidth);
+        ctx.lineTo(segX - perpX * segWidth, segY - perpY * segWidth);
+        ctx.stroke();
+    }
+    
+    // Add subtle pole ground base
+    ctx.fillStyle = '#555555';
+    ctx.fillRect(poleX - 8, poleBottomY, 16, 4);
+    
     ctx.restore();
 }
 
@@ -224,10 +307,9 @@ function gameLoop() {
     const helperEnabled = isHelperModeEnabled();
     drawGamePanel(ctx, score, triesLeft, helperEnabled);
     
-    drawRoundBanner(ctx, triesLeft);
-    drawTracer(ctx, arrowPath);
+    drawRoundBanner(ctx, triesLeft);    drawTracer(ctx, arrowPath);
     drawWind(ctx, canvas, wind);
-    drawWindGauge(ctx, canvas, wind, time);
+    drawWindsock(ctx, canvas, wind, time);
     updateLeaves();
     
     // Helper mode - calculate and draw optimal aim
