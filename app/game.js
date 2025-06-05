@@ -1,6 +1,6 @@
 // Import modules
 import Bow from './entities/bow.js';
-import Arrow from './entities/arrow.js';
+import Arrow from './entities/Arrow.js';
 import Target from './entities/target.js';
 import { drawBow, drawArrow, drawTarget } from './systems/rendering.js';
 import { setupInputHandlers, setInputEnabled, isHelperModeEnabled } from './systems/input.js';
@@ -13,6 +13,8 @@ import { drawTracer, clearSparkles } from './systems/tracer.js';
 import { calculateOptimalAngle, drawHelperMarker } from './systems/helper.js';
 import { responsive } from './utils/responsiveUtils.js';
 import { createTouchFeedback, updateTouchFeedback, drawTouchFeedback } from './systems/touchFeedback.js';
+import { addStuckArrow, drawStuckArrows, clearStuckArrows } from './systems/stuckArrows.js';
+import { createImpactEffect, updateImpactEffects, drawImpactEffects, clearImpactEffects } from './systems/impactEffects.js';
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -122,6 +124,20 @@ function onArrowHit(distance) {
     targetColor = 'green';
     setTimeout(() => { targetColor = 'red'; }, 500);
     
+    // Add the arrow to the stuck arrows collection before resetting it
+    addStuckArrow(arrow, target);
+    
+    // Create visual impact effect at the arrow's tip position (where collision occurred)
+    const arrowLength = 150;
+    const arrowTipX = arrow.x + Math.cos(arrow.angle) * (arrowLength / 2);
+    const arrowTipY = arrow.y + Math.sin(arrow.angle) * (arrowLength / 2);
+    createImpactEffect(arrowTipX, arrowTipY);
+    
+    // Provide haptic feedback on hit (stronger than miss)
+    if (responsive.isMobile) {
+        responsive.provideTapFeedback('medium');
+    }
+    
     // Show reaction message based on accuracy (hit = perfect)
     const message = getReactionMessage(0, target.radius); // 0 distance for hit
     showReactionMessage(message);
@@ -130,6 +146,11 @@ function onArrowHit(distance) {
 }
 
 function onArrowMiss(distance) {
+    // Provide light haptic feedback on miss
+    if (responsive.isMobile) {
+        responsive.provideTapFeedback('light');
+    }
+    
     // Show reaction message based on how close the miss was
     const message = getReactionMessage(distance, target.radius);
     showReactionMessage(message);
@@ -190,6 +211,8 @@ function resetGame() {
     arrow.angle = bow.angle;
     arrowPath = [];
     clearSparkles(); // Clear sparkle effects when game resets
+    clearStuckArrows(); // Clear any arrows stuck to the target
+    clearImpactEffects(); // Clear any impact effects
     updateWind(); // Set wind for the first shot of the round
 }
 
@@ -475,16 +498,22 @@ function gameLoop(timestamp) {
         drawLeaves(ctx);
         drawBow(ctx, bow);
         
-        // Mobile touch feedback
-        updateTouchFeedback();
+        // Mobile touch feedback        updateTouchFeedback();
         drawTouchFeedback(ctx);
         drawArrow(ctx, arrow, bow);
         drawTarget(ctx, target, targetColor);
-          // Draw unified control panel with all game info
+        
+        // Draw any arrows that are stuck in the target
+        drawStuckArrows(ctx, target);
+            // Draw unified control panel with all game info
         const helperEnabled = isHelperModeEnabled();
         drawGamePanel(ctx, score, triesLeft, helperEnabled, wind);
         
         drawRoundBanner(ctx, triesLeft);
+        
+        // Update and draw impact effects
+        updateImpactEffects();
+        drawImpactEffects(ctx);
         
         // Conditionally draw tracer for performance on mobile
         if (!responsive.isSmallMobile || !responsive.shouldReduceEffects()) {
