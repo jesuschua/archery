@@ -8,9 +8,9 @@ import { updateArrow, getReactionMessage } from './systems/gameLogic.js';
 import { randomWind } from './utils/gameUtils.js';
 import { drawBackground } from './systems/background.js';
 import { drawWind, drawWindIndicator } from './systems/wind.js';
-import { drawScore, drawTriesLeft, drawRoundBanner, drawEndOfRoundBanner, createPlayAgainButton, removePlayAgainButton, showReactionMessage, updateReactionMessage, drawReactionMessage } from './systems/ui.js';
+import { drawGamePanel, drawRoundBanner, drawEndOfRoundBanner, createPlayAgainButton, removePlayAgainButton, showReactionMessage, updateReactionMessage, drawReactionMessage } from './systems/ui.js';
 import { drawTracer, clearSparkles } from './systems/tracer.js';
-import { calculateOptimalAngle, drawHelperMarker, drawHelperUI } from './systems/helper.js';
+import { calculateOptimalAngle, drawHelperMarker } from './systems/helper.js';
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -40,6 +40,12 @@ let windGaugeFlapSpeed = 0;
 let showEndOfRound = false;
 
 function createLeaf() {
+    // Create varied orange-toned leaves for the wind indicator
+    const orangeHues = [20, 25, 30, 35, 40]; // Orange range in HSL
+    const selectedHue = orangeHues[Math.floor(Math.random() * orangeHues.length)];
+    const saturation = 70 + Math.random() * 20; // 70-90% saturation
+    const lightness = 45 + Math.random() * 25;  // 45-70% lightness
+    
     return {
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height * 0.5,
@@ -47,7 +53,7 @@ function createLeaf() {
         angle: Math.random() * Math.PI * 2,
         speed: 0.5 + Math.random() * 1.5,
         sway: Math.random() * 0.5 + 0.5,
-        color: `hsl(${90 + Math.random() * 40}, 60%, 50%)`
+        color: `hsl(${selectedHue}, ${saturation}%, ${lightness}%)`
     };
 }
 
@@ -213,22 +219,22 @@ function gameLoop() {
     drawBow(ctx, bow);
     drawArrow(ctx, arrow, bow);
     drawTarget(ctx, target, targetColor);
-    drawScore(ctx, score);
-    drawTriesLeft(ctx, triesLeft);
-    drawRoundBanner(ctx, triesLeft);    drawTracer(ctx, arrowPath);
+    
+    // Draw unified control panel with all game info
+    const helperEnabled = isHelperModeEnabled();
+    drawGamePanel(ctx, score, triesLeft, helperEnabled);
+    
+    drawRoundBanner(ctx, triesLeft);
+    drawTracer(ctx, arrowPath);
     drawWind(ctx, canvas, wind);
     drawWindGauge(ctx, canvas, wind, time);
     updateLeaves();
     
     // Helper mode - calculate and draw optimal aim
-    const helperEnabled = isHelperModeEnabled();
     if (helperEnabled && !arrow.fired && !showEndOfRound) {
         const optimalAngle = calculateOptimalAngle(bow, target, wind, gravity);
         drawHelperMarker(ctx, bow, optimalAngle, helperEnabled);
     }
-    
-    // Draw helper UI
-    drawHelperUI(ctx, helperEnabled);
     
     // Update and draw reaction messages
     updateReactionMessage();

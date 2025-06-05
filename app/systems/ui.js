@@ -5,6 +5,96 @@ let reactionMessage = '';
 let reactionMessageOpacity = 0;
 let reactionMessageTimer = 0;
 
+export function drawGamePanel(ctx, score, triesLeft, helperEnabled) {
+    const panelX = 20;
+    const panelY = 20;
+    const panelWidth = 280;
+    const panelHeight = 140;
+    const sectionHeight = 35;
+    const padding = 15;
+    
+    ctx.save();
+    
+    // Main panel background with elegant shadow
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetX = 3;
+    ctx.shadowOffsetY = 3;
+    
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+    ctx.strokeStyle = '#FF8C42';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(panelX, panelY, panelWidth, panelHeight, 18);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.shadowColor = 'transparent';
+    
+    // Section 1: Score
+    const scoreY = panelY + padding + 20;
+    ctx.fillStyle = '#FF6B00';
+    ctx.font = 'bold 22px "Inter", "Segoe UI", system-ui, sans-serif';
+    ctx.fillText('Score:', panelX + padding, scoreY);
+    
+    ctx.fillStyle = '#333333';
+    ctx.font = 'bold 26px "Inter", "Segoe UI", system-ui, sans-serif';
+    ctx.fillText(`${score}`, panelX + 100, scoreY);
+    
+    // Divider line
+    ctx.strokeStyle = 'rgba(255, 140, 66, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(panelX + padding, scoreY + 12);
+    ctx.lineTo(panelX + panelWidth - padding, scoreY + 12);
+    ctx.stroke();
+    
+    // Section 2: Tries Left
+    const triesY = scoreY + sectionHeight;
+    const isLow = triesLeft <= 1;
+    const triesColor = isLow ? '#FF4757' : '#FF6B00';
+    
+    ctx.fillStyle = triesColor;
+    ctx.font = 'bold 20px "Inter", "Segoe UI", system-ui, sans-serif';
+    ctx.fillText('Tries Left:', panelX + padding, triesY);
+    
+    ctx.fillStyle = '#333333';
+    ctx.font = 'bold 24px "Inter", "Segoe UI", system-ui, sans-serif';
+    ctx.fillText(`${triesLeft}`, panelX + 130, triesY);
+    
+    // Divider line
+    ctx.strokeStyle = 'rgba(255, 140, 66, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(panelX + padding, triesY + 12);
+    ctx.lineTo(panelX + panelWidth - padding, triesY + 12);
+    ctx.stroke();
+    
+    // Section 3: Helper Mode
+    const helperY = triesY + sectionHeight;
+    const helperStatusColor = helperEnabled ? '#FF8C42' : '#999999';
+    const helperBgColor = helperEnabled ? 'rgba(255, 140, 66, 0.1)' : 'transparent';
+    
+    // Helper status background highlight
+    if (helperEnabled) {
+        ctx.fillStyle = helperBgColor;
+        ctx.beginPath();
+        ctx.roundRect(panelX + 8, helperY - 18, panelWidth - 16, 28, 8);
+        ctx.fill();
+    }
+    
+    ctx.fillStyle = helperStatusColor;
+    ctx.font = 'bold 18px "Inter", "Segoe UI", system-ui, sans-serif';
+    ctx.fillText(`Helper: ${helperEnabled ? 'ON' : 'OFF'}`, panelX + padding, helperY);
+    
+    // Helper instruction
+    ctx.fillStyle = helperEnabled ? '#FF8C42' : '#BBBBBB';
+    ctx.font = '14px "Inter", "Segoe UI", system-ui, sans-serif';
+    ctx.fillText('Press H to toggle', panelX + 150, helperY);
+    
+    ctx.restore();
+}
+
 export function drawScore(ctx, score) {
     ctx.save();
     

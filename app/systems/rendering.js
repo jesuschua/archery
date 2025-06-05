@@ -50,13 +50,13 @@ export function drawArrow(ctx, arrow, bow) {
     ctx.fillStyle = shaftGradient;
     ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
     ctx.shadowBlur = 4;
-    ctx.fillRect(-90, -2, 180, 4);
-    
-    // Arrow fletching - realistic feathers extending backward from nock end
+    ctx.fillRect(-90, -2, 180, 4);    // Arrow fletching - realistic feathers extending backward from nock end
     ctx.shadowColor = 'transparent';
     ctx.fillStyle = '#FFFFFF';
     ctx.strokeStyle = '#FF8C42';
-    ctx.lineWidth = 1;    // Draw three fletching feathers that extend backward from nock end
+    ctx.lineWidth = 1;
+    
+    // Draw three fletching feathers that extend backward from nock end
     // Feather 1 (top) - larger feather extending backward and upward
     ctx.beginPath();
     ctx.moveTo(-90, 0);          // Start exactly at shaft end
@@ -66,8 +66,7 @@ export function drawArrow(ctx, arrow, bow) {
     ctx.lineTo(-90, -1);         // Back to shaft end (thin attachment point)
     ctx.closePath();
     ctx.fill();
-    ctx.stroke();
-    
+    ctx.stroke();    
     // Feather 2 (bottom) - larger feather extending backward and downward  
     ctx.beginPath();
     ctx.moveTo(-90, 0);          // Start exactly at shaft end
@@ -77,8 +76,7 @@ export function drawArrow(ctx, arrow, bow) {
     ctx.lineTo(-90, 1);          // Back to shaft end (thin attachment point)
     ctx.closePath();
     ctx.fill();
-    ctx.stroke();
-    
+    ctx.stroke();    
     // Feather 3 (side) - straight back feather for stability
     ctx.beginPath();
     ctx.moveTo(-90, 0);          // Start exactly at shaft end

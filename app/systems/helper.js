@@ -117,41 +117,12 @@ export function drawHelperMarker(ctx, bow, optimalAngle, helperEnabled) {
     ctx.moveTo(helperEndX, helperEndY - pulseSize);
     ctx.lineTo(helperEndX, helperEndY + pulseSize);
     ctx.stroke();
-    
-    ctx.restore();
+      ctx.restore();
 }
 
+// Helper UI is now integrated into the main game panel in ui.js
+// This function is kept for compatibility but no longer draws anything
 export function drawHelperUI(ctx, helperEnabled) {
-    ctx.save();
-    
-    // Orange-themed helper mode status
-    const statusX = 25;
-    const statusY = 175;
-    const statusWidth = 180;
-    const statusHeight = 50;
-    
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
-    ctx.shadowBlur = 6;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
-    
-    ctx.fillStyle = helperEnabled ? 'rgba(255, 140, 66, 0.95)' : 'rgba(255, 255, 255, 0.95)';
-    ctx.strokeStyle = helperEnabled ? '#FF6B00' : '#CCCCCC';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(statusX, statusY, statusWidth, statusHeight, 12);
-    ctx.fill();
-    ctx.stroke();
-    
-    ctx.shadowColor = 'transparent';
-    ctx.fillStyle = helperEnabled ? '#FFFFFF' : '#FF6B00';
-    ctx.font = 'bold 16px "Segoe UI", system-ui, sans-serif';
-    ctx.fillText(`Helper: ${helperEnabled ? 'ON' : 'OFF'}`, statusX + 12, statusY + 22);
-    
-    // Instruction text
-    ctx.fillStyle = helperEnabled ? 'rgba(255, 255, 255, 0.9)' : '#999999';
-    ctx.font = 'bold 13px "Segoe UI", system-ui, sans-serif';
-    ctx.fillText('Press H to toggle', statusX + 12, statusY + 40);
-    
-    ctx.restore();
+    // Helper UI has been moved to the unified game panel
+    // See drawGamePanel() in ui.js
 }
