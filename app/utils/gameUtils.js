@@ -25,8 +25,9 @@ export function lineCircleIntersection(x1, y1, x2, y2, cx, cy, r) {
 }
 
 export function randomWind() {
+    // Wind strength is always positive, direction is 0..2PI
     return {
-        strength: Math.random() * 2 - 1,
+        strength: Math.random() * 5, // 0 to 5
         direction: Math.random() * Math.PI * 2
     };
 }

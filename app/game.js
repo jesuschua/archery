@@ -30,8 +30,24 @@ let arrow = new Arrow(bow.x, bow.y, canvas.width * 0.02, canvas.height * 0.01);
 let target = new Target(canvas.width * 0.9, canvas.height * 0.5, canvas.width * target_ratio, 100, 0.01);
 
 let score = 0;
-let triesLeft = 3;
+let triesLeft = 5;
 let arrowPath = [];
+
+let leaves = Array.from({ length: 15 }, () => createLeaf());
+let windGaugeFlapAngle = 0;
+let windGaugeFlapSpeed = 0;
+
+function createLeaf() {
+    return {
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height * 0.5,
+        size: 10 + Math.random() * 10,
+        angle: Math.random() * Math.PI * 2,
+        speed: 0.5 + Math.random() * 1.5,
+        sway: Math.random() * 0.5 + 0.5,
+        color: `hsl(${90 + Math.random() * 40}, 60%, 50%)`
+    };
+}
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -50,7 +66,7 @@ function resizeCanvas() {
 }
 
 function updateWind() {
-    wind = randomWind();
+    wind = randomWind(); // Wind changes for each shot
 }
 
 function onArrowHit() {
@@ -79,12 +95,14 @@ function resetArrow() {
             alert(`Game Over! Your score: ${score}`);
             resetGame();
         }, 500);
+    } else {
+        updateWind(); // Only update wind after the arrow is reset (i.e., after a shot is finished)
     }
 }
 
 function resetGame() {
     score = 0;
-    triesLeft = 3;
+    triesLeft = 5;
     targetColor = 'red';
     arrow.fired = false;
     arrow.x = bow.x;
@@ -94,12 +112,86 @@ function resetGame() {
     arrow.speed = 0;
     arrow.angle = bow.angle;
     arrowPath = [];
+    updateWind(); // Set wind for the first shot of the round
+}
+
+function updateLeaves() {
+    for (let leaf of leaves) {
+        // Wind effect
+        const windSpeed = 2 + Math.abs(wind.strength) * 4;
+        leaf.x += windSpeed * Math.cos(wind.direction) * 0.7;
+        leaf.y += windSpeed * Math.sin(wind.direction) * 0.7 + Math.sin(time * 0.05 + leaf.sway) * 0.5;
+        leaf.angle += 0.02 * wind.strength;
+        // Wrap around
+        if (leaf.x > canvas.width + 20) leaf.x = -20;
+        if (leaf.x < -20) leaf.x = canvas.width + 20;
+        if (leaf.y > canvas.height * 0.7) leaf.y = Math.random() * canvas.height * 0.3;
+        if (leaf.y < 0) leaf.y = canvas.height * 0.7;
+    }
+}
+
+function drawLeaves(ctx) {
+    for (let leaf of leaves) {
+        ctx.save();
+        ctx.translate(leaf.x, leaf.y);
+        ctx.rotate(leaf.angle);
+        ctx.fillStyle = leaf.color;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, leaf.size, leaf.size / 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+}
+
+function drawWindGauge(ctx, canvas, wind, time) {
+    // Gauge base
+    const centerX = canvas.width * 0.85;
+    const centerY = canvas.height * 0.15;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 36, Math.PI * 0.7, Math.PI * 2.3, false);
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = '#888';
+    ctx.stroke();
+    // Needle
+    const needleLength = 32;
+    const needleAngle = wind.direction;
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(needleAngle);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(needleLength, 0);
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = '#e33';
+    ctx.stroke();
+    ctx.restore();
+    // Flapping flag
+    ctx.save();
+    ctx.translate(centerX + Math.cos(needleAngle) * needleLength, centerY + Math.sin(needleAngle) * needleLength);
+    // Flap angle and speed depend on wind strength
+    windGaugeFlapSpeed = 0.2 + Math.abs(wind.strength) * 0.8;
+    windGaugeFlapAngle = Math.sin(time * windGaugeFlapSpeed) * (10 + 20 * Math.abs(wind.strength)) * Math.PI / 180;
+    ctx.rotate(needleAngle + windGaugeFlapAngle);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, -8);
+    ctx.lineTo(28 + 30 * Math.abs(wind.strength), 0);
+    ctx.lineTo(0, 8);
+    ctx.closePath();
+    ctx.fillStyle = '#f7e96b';
+    ctx.globalAlpha = 0.85;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    ctx.restore();
 }
 
 function gameLoop() {
     drawBackground(ctx, canvas);
     time += 1;
     target.update(time, canvas.height);
+    drawLeaves(ctx);
     drawBow(ctx, bow);
     drawArrow(ctx, arrow, bow);
     drawTarget(ctx, target, targetColor);
@@ -107,10 +199,12 @@ function gameLoop() {
     drawTriesLeft(ctx, triesLeft);
     drawTracer(ctx, arrowPath);
     drawWind(ctx, canvas, wind);
-    drawWindIndicator(ctx, canvas, wind);
+    drawWindGauge(ctx, canvas, wind, time);
+    updateLeaves();
     updateArrow(arrow, wind, gravity, arrowPath, target, onArrowHit, onArrowMiss);
     requestAnimationFrame(gameLoop);
 }
 
-setupInputHandlers(bow, arrow, updateWind);
+// Remove updateWind from setupInputHandlers (so wind does not change on mousedown/touchstart)
+setupInputHandlers(bow, arrow, () => {}, /* onArrowRelease */);
 gameLoop();
