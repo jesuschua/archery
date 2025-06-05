@@ -3,13 +3,14 @@ import Bow from './entities/bow.js';
 import Arrow from './entities/arrow.js';
 import Target from './entities/target.js';
 import { drawBow, drawArrow, drawTarget } from './systems/rendering.js';
-import { setupInputHandlers, setInputEnabled } from './systems/input.js';
+import { setupInputHandlers, setInputEnabled, isHelperModeEnabled } from './systems/input.js';
 import { updateArrow, getReactionMessage } from './systems/gameLogic.js';
 import { randomWind } from './utils/gameUtils.js';
 import { drawBackground } from './systems/background.js';
 import { drawWind, drawWindIndicator } from './systems/wind.js';
 import { drawScore, drawTriesLeft, drawRoundBanner, drawEndOfRoundBanner, createPlayAgainButton, removePlayAgainButton, showReactionMessage, updateReactionMessage, drawReactionMessage } from './systems/ui.js';
 import { drawTracer } from './systems/tracer.js';
+import { calculateOptimalAngle, drawHelperMarker, drawHelperUI } from './systems/helper.js';
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -212,11 +213,20 @@ function gameLoop() {
     drawTarget(ctx, target, targetColor);
     drawScore(ctx, score);
     drawTriesLeft(ctx, triesLeft);
-    drawRoundBanner(ctx, triesLeft);
-    drawTracer(ctx, arrowPath);
+    drawRoundBanner(ctx, triesLeft);    drawTracer(ctx, arrowPath);
     drawWind(ctx, canvas, wind);
     drawWindGauge(ctx, canvas, wind, time);
     updateLeaves();
+    
+    // Helper mode - calculate and draw optimal aim
+    const helperEnabled = isHelperModeEnabled();
+    if (helperEnabled && !arrow.fired && !showEndOfRound) {
+        const optimalAngle = calculateOptimalAngle(bow, target, wind, gravity);
+        drawHelperMarker(ctx, bow, optimalAngle, helperEnabled);
+    }
+    
+    // Draw helper UI
+    drawHelperUI(ctx, helperEnabled);
     
     // Update and draw reaction messages
     updateReactionMessage();

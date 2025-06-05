@@ -1,5 +1,6 @@
 // Input system for the archery game
 let inputEnabled = true;
+let helperMode = false;
 
 export function setupInputHandlers(bow, arrow, updateWind, onArrowRelease) {    function updateBowAngle(e) {
         if (!inputEnabled || arrow.fired) return;
@@ -30,6 +31,12 @@ export function setupInputHandlers(bow, arrow, updateWind, onArrowRelease) {    
             arrow.releaseAngle = bow.angle;
             onArrowRelease && onArrowRelease();
         }
+   }
+    // Add keyboard listener for helper mode toggle
+    function handleKeyPress(e) {
+        if (e.key === 'h' || e.key === 'H') {
+            toggleHelperMode();
+        }
     }
     window.addEventListener('mousemove', updateBowAngle);
     window.addEventListener('touchmove', updateBowAngle);
@@ -37,6 +44,7 @@ export function setupInputHandlers(bow, arrow, updateWind, onArrowRelease) {    
     window.addEventListener('touchstart', startPulling);
     window.addEventListener('mouseup', releaseArrow);
     window.addEventListener('touchend', releaseArrow);
+    window.addEventListener('keydown', handleKeyPress);
 }
 
 export function setInputEnabled(enabled) {
@@ -45,4 +53,18 @@ export function setInputEnabled(enabled) {
 
 export function isInputEnabled() {
     return inputEnabled;
+}
+
+export function toggleHelperMode() {
+    helperMode = !helperMode;
+    console.log(`Helper Mode: ${helperMode ? 'ENABLED' : 'DISABLED'}`);
+    return helperMode;
+}
+
+export function isHelperModeEnabled() {
+    return helperMode;
+}
+
+export function setHelperMode(enabled) {
+    helperMode = enabled;
 }
