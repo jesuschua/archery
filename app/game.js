@@ -11,6 +11,7 @@ import { drawWind, drawWindIndicator } from './systems/wind.js';
 import { drawGamePanel, drawRoundBanner, drawEndOfRoundBanner, createPlayAgainButton, removePlayAgainButton, showReactionMessage, updateReactionMessage, drawReactionMessage } from './systems/ui.js';
 import { drawTracer, clearSparkles } from './systems/tracer.js';
 import { calculateOptimalAngle, drawHelperMarker } from './systems/helper.js';
+import { responsive } from './utils/responsiveUtils.js';
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -23,12 +24,15 @@ window.addEventListener('resize', resizeCanvas);
 
 let time = 0;
 let targetColor = 'red';
-let target_ratio = 0.012;
 let wind = randomWind();
 
-let bow = new Bow(canvas.width * 0.2, canvas.height * 0.5, canvas.width * 0.025, canvas.height * 0.1);
+// Initialize game entities with responsive configurations
+let bowConfig = responsive.getBowConfig();
+let targetConfig = responsive.getTargetConfig();
+
+let bow = new Bow(bowConfig.x, bowConfig.y, bowConfig.width, bowConfig.height);
 let arrow = new Arrow(bow.x, bow.y, canvas.width * 0.01, canvas.height * 0.005);
-let target = new Target(canvas.width * 0.75, canvas.height * 0.5, canvas.width * target_ratio, 100, 0.01);
+let target = new Target(targetConfig.x, targetConfig.y, targetConfig.radius, 100, 0.01);
 
 let score = 0;
 let triesLeft = 5;
@@ -58,16 +62,27 @@ function createLeaf() {
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    bow.x = canvas.width * 0.2;
-    bow.y = canvas.height * 0.5;
-    bow.width = canvas.width * 0.025;
-    bow.height = canvas.height * 0.1;    arrow.x = bow.x;
+    
+    // Update responsive configurations
+    bowConfig = responsive.getBowConfig();
+    targetConfig = responsive.getTargetConfig();
+    
+    // Update bow position and size
+    bow.x = bowConfig.x;
+    bow.y = bowConfig.y;
+    bow.width = bowConfig.width;
+    bow.height = bowConfig.height;
+    
+    // Update arrow position and size
+    arrow.x = bow.x;
     arrow.y = bow.y;
     arrow.width = canvas.width * 0.01;
     arrow.height = canvas.height * 0.005;
-    target.x = canvas.width * 0.75;
-    target.y = canvas.height * 0.5;
-    target.radius = canvas.width * target_ratio;
+    
+    // Update target position and size
+    target.x = targetConfig.x;
+    target.y = targetConfig.y;
+    target.radius = targetConfig.radius;
 }
 
 function updateWind() {

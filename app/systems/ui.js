@@ -1,4 +1,6 @@
-// UI rendering system for the archery game - Orange & White Minimalist Theme
+// UI rendering system for the archery game - Orange & White Minimalist Theme with Mobile Support
+
+import { responsive } from '../utils/responsiveUtils.js';
 
 // Reaction message state
 let reactionMessage = '';
@@ -7,179 +9,158 @@ let reactionMessageTimer = 0;
 let spotterAnimationFrame = 0;
 
 export function drawGamePanel(ctx, score, triesLeft, helperEnabled) {
-    const panelX = 20;
-    const panelY = 20;
-    const panelWidth = 280;
-    const panelHeight = 140;
-    const sectionHeight = 35;
-    const padding = 15;
+    const config = responsive.getGamePanelConfig();
     
     ctx.save();
     
     // Main panel background with elegant shadow
     ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-    ctx.shadowBlur = 12;
-    ctx.shadowOffsetX = 3;
-    ctx.shadowOffsetY = 3;
+    ctx.shadowBlur = 12 * responsive.scaleFactor;
+    ctx.shadowOffsetX = 3 * responsive.scaleFactor;
+    ctx.shadowOffsetY = 3 * responsive.scaleFactor;
     
     ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
     ctx.strokeStyle = '#FF8C42';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3 * responsive.scaleFactor;
     ctx.beginPath();
-    ctx.roundRect(panelX, panelY, panelWidth, panelHeight, 18);
+    ctx.roundRect(config.x, config.y, config.width, config.height, 18 * responsive.scaleFactor);
     ctx.fill();
     ctx.stroke();
     
     ctx.shadowColor = 'transparent';
     
-    // Section 1: Score
-    const scoreY = panelY + padding + 20;
-    ctx.fillStyle = '#FF6B00';
-    ctx.font = 'bold 22px "Inter", "Segoe UI", system-ui, sans-serif';
-    ctx.fillText('Score:', panelX + padding, scoreY);
-    
-    ctx.fillStyle = '#333333';
-    ctx.font = 'bold 26px "Inter", "Segoe UI", system-ui, sans-serif';
-    ctx.fillText(`${score}`, panelX + 100, scoreY);
-    
-    // Divider line
-    ctx.strokeStyle = 'rgba(255, 140, 66, 0.3)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(panelX + padding, scoreY + 12);
-    ctx.lineTo(panelX + panelWidth - padding, scoreY + 12);
-    ctx.stroke();
-    
-    // Section 2: Tries Left
-    const triesY = scoreY + sectionHeight;
-    const isLow = triesLeft <= 1;
-    const triesColor = isLow ? '#FF4757' : '#FF6B00';
-    
-    ctx.fillStyle = triesColor;
-    ctx.font = 'bold 20px "Inter", "Segoe UI", system-ui, sans-serif';
-    ctx.fillText('Tries Left:', panelX + padding, triesY);
-    
-    ctx.fillStyle = '#333333';
-    ctx.font = 'bold 24px "Inter", "Segoe UI", system-ui, sans-serif';
-    ctx.fillText(`${triesLeft}`, panelX + 130, triesY);
-    
-    // Divider line
-    ctx.strokeStyle = 'rgba(255, 140, 66, 0.3)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(panelX + padding, triesY + 12);
-    ctx.lineTo(panelX + panelWidth - padding, triesY + 12);
-    ctx.stroke();
-    
-    // Section 3: Helper Mode
-    const helperY = triesY + sectionHeight;
-    const helperStatusColor = helperEnabled ? '#FF8C42' : '#999999';
-    const helperBgColor = helperEnabled ? 'rgba(255, 140, 66, 0.1)' : 'transparent';
-    
-    // Helper status background highlight
-    if (helperEnabled) {
-        ctx.fillStyle = helperBgColor;
+    // Compact mobile layout
+    if (responsive.isMobile) {
+        // Single row layout for mobile
+        const centerY = config.y + config.height / 2 + 4;
+        
+        // Score
+        ctx.fillStyle = '#FF6B00';
+        ctx.font = responsive.getScaledFont(config.fontSize.title);
+        ctx.fillText('Score:', config.x + config.padding, centerY - 12);
+        
+        ctx.fillStyle = '#333333';
+        ctx.font = responsive.getScaledFont(config.fontSize.value);
+        ctx.fillText(`${score}`, config.x + config.padding + 50 * responsive.scaleFactor, centerY - 12);
+        
+        // Tries Left
+        ctx.fillStyle = triesLeft <= 1 ? '#FF4757' : '#FF6B00';
+        ctx.font = responsive.getScaledFont(config.fontSize.title);
+        ctx.fillText('Tries:', config.x + config.padding, centerY + 12);
+        
+        ctx.fillStyle = '#333333';
+        ctx.font = responsive.getScaledFont(config.fontSize.value);
+        ctx.fillText(`${triesLeft}`, config.x + config.padding + 50 * responsive.scaleFactor, centerY + 12);
+        
+        // Helper indicator (compact)
+        if (helperEnabled) {
+            ctx.fillStyle = '#FF8C42';
+            ctx.beginPath();
+            ctx.arc(config.x + config.width - 15 * responsive.scaleFactor, 
+                   config.y + 15 * responsive.scaleFactor, 
+                   6 * responsive.scaleFactor, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = responsive.getScaledFont(10);
+            ctx.textAlign = 'center';
+            ctx.fillText('H', config.x + config.width - 15 * responsive.scaleFactor, 
+                        config.y + 19 * responsive.scaleFactor);
+            ctx.textAlign = 'start';
+        }
+    } else {
+        // Desktop layout (existing)
+        const sectionHeight = 35;
+        
+        // Section 1: Score
+        const scoreY = config.y + config.padding + 20;
+        ctx.fillStyle = '#FF6B00';
+        ctx.font = responsive.getScaledFont(config.fontSize.title);
+        ctx.fillText('Score:', config.x + config.padding, scoreY);
+        
+        ctx.fillStyle = '#333333';
+        ctx.font = responsive.getScaledFont(config.fontSize.value);
+        ctx.fillText(`${score}`, config.x + 100, scoreY);
+        
+        // Divider line
+        ctx.strokeStyle = 'rgba(255, 140, 66, 0.3)';
+        ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.roundRect(panelX + 8, helperY - 18, panelWidth - 16, 28, 8);
-        ctx.fill();
+        ctx.moveTo(config.x + config.padding, scoreY + 12);
+        ctx.lineTo(config.x + config.width - config.padding, scoreY + 12);
+        ctx.stroke();
+        
+        // Section 2: Tries Left
+        const triesY = scoreY + sectionHeight;
+        const isLow = triesLeft <= 1;
+        const triesColor = isLow ? '#FF4757' : '#FF6B00';
+        
+        ctx.fillStyle = triesColor;
+        ctx.font = responsive.getScaledFont(20);
+        ctx.fillText('Tries Left:', config.x + config.padding, triesY);
+        
+        ctx.fillStyle = '#333333';
+        ctx.font = responsive.getScaledFont(24);
+        ctx.fillText(`${triesLeft}`, config.x + 130, triesY);
+        
+        // Divider line
+        ctx.strokeStyle = 'rgba(255, 140, 66, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(config.x + config.padding, triesY + 12);
+        ctx.lineTo(config.x + config.width - config.padding, triesY + 12);
+        ctx.stroke();
+        
+        // Section 3: Helper Mode
+        const helperY = triesY + sectionHeight;
+        const helperStatusColor = helperEnabled ? '#FF8C42' : '#999999';
+        const helperBgColor = helperEnabled ? 'rgba(255, 140, 66, 0.1)' : 'transparent';
+        
+        // Helper status background highlight
+        if (helperEnabled) {
+            ctx.fillStyle = helperBgColor;
+            ctx.beginPath();
+            ctx.roundRect(config.x + 8, helperY - 18, config.width - 16, 28, 8);
+            ctx.fill();
+        }
+        
+        ctx.fillStyle = helperStatusColor;
+        ctx.font = responsive.getScaledFont(18);
+        ctx.fillText(`Helper: ${helperEnabled ? 'ON' : 'OFF'}`, config.x + config.padding, helperY);
+        
+        // Helper instruction
+        ctx.fillStyle = helperEnabled ? '#FF8C42' : '#BBBBBB';
+        ctx.font = responsive.getScaledFont(config.fontSize.small);
+        ctx.fillText('Press H to toggle', config.x + 150, helperY);
     }
-    
-    ctx.fillStyle = helperStatusColor;
-    ctx.font = 'bold 18px "Inter", "Segoe UI", system-ui, sans-serif';
-    ctx.fillText(`Helper: ${helperEnabled ? 'ON' : 'OFF'}`, panelX + padding, helperY);
-    
-    // Helper instruction
-    ctx.fillStyle = helperEnabled ? '#FF8C42' : '#BBBBBB';
-    ctx.font = '14px "Inter", "Segoe UI", system-ui, sans-serif';
-    ctx.fillText('Press H to toggle', panelX + 150, helperY);
-    
-    ctx.restore();
-}
-
-export function drawScore(ctx, score) {
-    ctx.save();
-    
-    // Clean minimalist panel with orange accent
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
-    
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-    ctx.strokeStyle = '#FF8C42';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(15, 15, 160, 48, 16);
-    ctx.fill();
-    ctx.stroke();
-    
-    // Clean typography
-    ctx.shadowColor = 'transparent';
-    ctx.fillStyle = '#FF6B00';
-    ctx.font = 'bold 24px "Segoe UI", system-ui, sans-serif';
-    ctx.fillText(`Score:`, 28, 42);
-    
-    ctx.fillStyle = '#333333';
-    ctx.font = 'bold 28px "Segoe UI", system-ui, sans-serif';
-    ctx.fillText(`${score}`, 110, 45);
-    
-    ctx.restore();
-}
-
-export function drawTriesLeft(ctx, triesLeft) {
-    ctx.save();
-    
-    // Color scheme based on tries remaining
-    const isLow = triesLeft <= 1;
-    const accentColor = isLow ? '#FF4757' : '#FF8C42';
-    
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
-    
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-    ctx.strokeStyle = accentColor;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(15, 70, 200, 44, 16);
-    ctx.fill();
-    ctx.stroke();
-    
-    ctx.shadowColor = 'transparent';
-    ctx.fillStyle = accentColor;
-    ctx.font = 'bold 20px "Segoe UI", system-ui, sans-serif';
-    ctx.fillText(`Tries Left:`, 28, 95);
-    
-    ctx.fillStyle = '#333333';
-    ctx.font = 'bold 24px "Segoe UI", system-ui, sans-serif';
-    ctx.fillText(`${triesLeft}`, 150, 97);
     
     ctx.restore();
 }
 
 export function drawRoundBanner(ctx, triesLeft) {
     if (triesLeft === 5) {
+        const config = responsive.getBannerConfig();
+        
         ctx.save();
         
         ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-        ctx.shadowBlur = 12;
-        ctx.shadowOffsetX = 3;
-        ctx.shadowOffsetY = 3;
+        ctx.shadowBlur = 12 * responsive.scaleFactor;
+        ctx.shadowOffsetX = 3 * responsive.scaleFactor;
+        ctx.shadowOffsetY = 3 * responsive.scaleFactor;
         
         ctx.fillStyle = 'rgba(255, 255, 255, 0.98)';
         ctx.strokeStyle = '#FF8C42';
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 4 * responsive.scaleFactor;
         ctx.beginPath();
-        ctx.roundRect(ctx.canvas.width/2-160, 30, 320, 54, 20);
+        ctx.roundRect(config.x, config.y, config.width, config.height, 20 * responsive.scaleFactor);
         ctx.fill();
         ctx.stroke();
         
         ctx.shadowColor = 'transparent';
         ctx.fillStyle = '#FF6B00';
-        ctx.font = 'bold 32px "Segoe UI", system-ui, sans-serif';
+        ctx.font = responsive.getScaledFont(config.fontSize);
         ctx.textAlign = 'center';
-        ctx.fillText('New Round!', ctx.canvas.width/2, 68);
+        ctx.fillText('New Round!', config.x + config.width / 2, config.y + config.height / 2 + config.fontSize / 3);
         ctx.textAlign = 'start';
         
         ctx.restore();
@@ -187,33 +168,34 @@ export function drawRoundBanner(ctx, triesLeft) {
 }
 
 export function drawEndOfRoundBanner(ctx, score) {
+    const config = responsive.getEndGameBannerConfig();
+    
     ctx.save();
     
     ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-    ctx.shadowBlur = 16;
-    ctx.shadowOffsetX = 4;
-    ctx.shadowOffsetY = 4;
+    ctx.shadowBlur = 16 * responsive.scaleFactor;
+    ctx.shadowOffsetX = 4 * responsive.scaleFactor;
+    ctx.shadowOffsetY = 4 * responsive.scaleFactor;
     
     ctx.fillStyle = 'rgba(255, 255, 255, 0.98)';
     ctx.strokeStyle = '#FF8C42';
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 5 * responsive.scaleFactor;
     ctx.beginPath();
-    ctx.roundRect(ctx.canvas.width/2-220, ctx.canvas.height/2-80, 440, 160, 32);
+    ctx.roundRect(config.x, config.y, config.width, config.height, 32 * responsive.scaleFactor);
     ctx.fill();
     ctx.stroke();
     
     ctx.shadowColor = 'transparent';
     ctx.fillStyle = '#FF6B00';
-    ctx.font = 'bold 36px "Segoe UI", system-ui, sans-serif';
+    ctx.font = responsive.getScaledFont(config.fontSize.title);
     ctx.textAlign = 'center';
-    ctx.fillText('Round Over!', ctx.canvas.width/2, ctx.canvas.height/2-20);
+    ctx.fillText('Round Over!', config.x + config.width / 2, config.y + config.height / 2 - 10);
     
     ctx.fillStyle = '#333333';
-    ctx.font = 'bold 28px "Segoe UI", system-ui, sans-serif';
-    ctx.fillText(`Your Score: ${score}`, ctx.canvas.width/2, ctx.canvas.height/2+30);
+    ctx.font = responsive.getScaledFont(config.fontSize.score);
+    ctx.fillText(`Your Score: ${score}`, config.x + config.width / 2, config.y + config.height / 2 + 25);
     ctx.textAlign = 'start';
-    
-    ctx.restore();
+      ctx.restore();
 }
 
 export function createPlayAgainButton(onPlayAgain) {
@@ -223,6 +205,8 @@ export function createPlayAgainButton(onPlayAgain) {
         existingButton.remove();
     }
     
+    const config = responsive.getPlayAgainButtonConfig();
+    
     const button = document.createElement('button');
     button.id = 'play-again-btn';
     button.textContent = 'Play Again';
@@ -230,34 +214,45 @@ export function createPlayAgainButton(onPlayAgain) {
         position: fixed;
         left: 50%;
         top: 50%;
-        transform: translate(-50%, 120px);
-        width: 200px;
-        height: 60px;
-        font-size: 22px;
+        transform: translate(-50%, ${config.offsetY}px);
+        width: ${config.width}px;
+        height: ${config.height}px;
+        font-size: ${config.fontSize}px;
         font-weight: 600;
-        font-family: "Segoe UI", system-ui, sans-serif;
+        font-family: "Inter", "Segoe UI", system-ui, sans-serif;
         background: #FF8C42;
         color: white;
-        border: 3px solid #FF6B00;
-        border-radius: 30px;
+        border: ${Math.max(2, 3 * responsive.scaleFactor)}px solid #FF6B00;
+        border-radius: ${config.height / 2}px;
         cursor: pointer;
         z-index: 10000;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 12px rgba(255, 140, 66, 0.3);
+        box-shadow: 0 ${4 * responsive.scaleFactor}px ${12 * responsive.scaleFactor}px rgba(255, 140, 66, 0.3);
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
     `;
     
-    // Enhanced hover effect
-    button.addEventListener('mouseenter', () => {
+    // Enhanced hover/touch effects
+    const addActiveStyle = () => {
         button.style.background = '#FF6B00';
-        button.style.transform = 'translate(-50%, 120px) scale(1.05)';
-        button.style.boxShadow = '0 6px 20px rgba(255, 107, 0, 0.4)';
-    });
+        button.style.transform = `translate(-50%, ${config.offsetY}px) scale(1.05)`;
+        button.style.boxShadow = `0 ${6 * responsive.scaleFactor}px ${20 * responsive.scaleFactor}px rgba(255, 107, 0, 0.4)`;
+    };
     
-    button.addEventListener('mouseleave', () => {
+    const removeActiveStyle = () => {
         button.style.background = '#FF8C42';
-        button.style.transform = 'translate(-50%, 120px) scale(1)';
-        button.style.boxShadow = '0 4px 12px rgba(255, 140, 66, 0.3)';
-    });
+        button.style.transform = `translate(-50%, ${config.offsetY}px) scale(1)`;
+        button.style.boxShadow = `0 ${4 * responsive.scaleFactor}px ${12 * responsive.scaleFactor}px rgba(255, 140, 66, 0.3)`;
+    };
+    
+    // Desktop events
+    button.addEventListener('mouseenter', addActiveStyle);
+    button.addEventListener('mouseleave', removeActiveStyle);
+    
+    // Mobile-friendly touch events
+    button.addEventListener('touchstart', addActiveStyle);
+    button.addEventListener('touchend', removeActiveStyle);
+    button.addEventListener('touchcancel', removeActiveStyle);
     
     // Add click handler
     button.addEventListener('click', onPlayAgain);
@@ -369,29 +364,29 @@ function drawSpeechBubble(ctx, canvas, message, opacity) {
     const spotterX = poleX - 20;
     const spotterY = canvas.height * 0.75 - 15; // On island surface (horizon at 0.75) with character height offset
     
+    // Get responsive configuration
+    const config = responsive.getSpeechBubbleConfig();
+    
     // Position bubble above and to the left of spotter
-    const bubbleWidth = 140;
-    const bubbleHeight = 50;
-    const bubbleX = spotterX - bubbleWidth + 20; // Position to left of spotter
-    const bubbleY = spotterY - bubbleHeight - 20; // Position above spotter
-    const tailSize = 12;
+    const bubbleX = spotterX - config.width + 20; // Position to left of spotter
+    const bubbleY = spotterY - config.height - 20; // Position above spotter
     
     ctx.save();
     ctx.globalAlpha = opacity;
     
-    // Main bubble with shadow
+    // Main bubble with responsive shadow
     ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetX = 3;
-    ctx.shadowOffsetY = 3;
+    ctx.shadowBlur = 8 * responsive.scaleFactor;
+    ctx.shadowOffsetX = 3 * responsive.scaleFactor;
+    ctx.shadowOffsetY = 3 * responsive.scaleFactor;
     
     ctx.fillStyle = '#FFFFFF';
     ctx.strokeStyle = '#FF8C42';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3 * responsive.scaleFactor;
     
     // Bubble body
     ctx.beginPath();
-    ctx.roundRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, 16);
+    ctx.roundRect(bubbleX, bubbleY, config.width, config.height, 16 * responsive.scaleFactor);
     ctx.fill();
     ctx.stroke();
     
@@ -399,31 +394,33 @@ function drawSpeechBubble(ctx, canvas, message, opacity) {
     ctx.shadowColor = 'transparent';
     ctx.beginPath();
     // Calculate tail position to point toward spotter's head
-    const tailCenterX = bubbleX + bubbleWidth - 40; // Tail on right side of bubble
-    const tailBaseY = bubbleY + bubbleHeight;
-    ctx.moveTo(tailCenterX - 8, tailBaseY);
+    const tailCenterX = bubbleX + config.width - 40 * responsive.scaleFactor; // Tail on right side of bubble
+    const tailBaseY = bubbleY + config.height;
+    const tailWidth = 8 * responsive.scaleFactor;
+    
+    ctx.moveTo(tailCenterX - tailWidth, tailBaseY);
     ctx.lineTo(spotterX, spotterY - 4); // Point directly to spotter's head
-    ctx.lineTo(tailCenterX + 8, tailBaseY);
+    ctx.lineTo(tailCenterX + tailWidth, tailBaseY);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
     
-    // Text with coaching enthusiasm
+    // Text with coaching enthusiasm and responsive sizing
     ctx.fillStyle = '#FF6B00';
-    ctx.font = 'bold 16px "Inter", "Segoe UI", system-ui, sans-serif';
+    ctx.font = responsive.getScaledFont(config.fontSize);
     ctx.textAlign = 'center';
     
     // Add some animation to the text
-    const textY = bubbleY + bubbleHeight/2 + 6;
+    const textY = bubbleY + config.height/2 + config.fontSize / 3;
     const bounce = Math.sin(spotterAnimationFrame * 0.3) * 1;
-    ctx.fillText(message, bubbleX + bubbleWidth/2, textY + bounce);
+    ctx.fillText(message, bubbleX + config.width/2, textY + bounce);
     
-    // Add some coaching-style emphasis marks
+    // Add some coaching-style emphasis marks (responsive)
     if (message === "Perfect!" || message === "Excellent!") {
         ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 12px "Inter", "Segoe UI", system-ui, sans-serif';
-        ctx.fillText('★', bubbleX + bubbleWidth - 15, bubbleY + 15);
-        ctx.fillText('★', bubbleX + 10, bubbleY + 15);
+        ctx.font = responsive.getScaledFont(Math.max(10, 12 * responsive.scaleFactor));
+        ctx.fillText('★', bubbleX + config.width - 15 * responsive.scaleFactor, bubbleY + 15 * responsive.scaleFactor);
+        ctx.fillText('★', bubbleX + 10 * responsive.scaleFactor, bubbleY + 15 * responsive.scaleFactor);
     }
     
     ctx.textAlign = 'start';
